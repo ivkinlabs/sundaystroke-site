@@ -6,7 +6,7 @@ export const SUNDAY_ISSUES: readonly SundayIssue[] = [
     number: 1,
     date: 'Sunday 1 November 2026',
     title: 'The Sunday post, issue 1',
-    pageTitle: 'Bermuda Playoff, McDowell’s Exit & Disc Golf Milestones | SundayStroke',
+    pageTitle: 'Bermuda Playoff, McDowell’s Exit & a Million-Dollar Milestone | SundayStroke',
     summary: 'A Monday play-off in Bermuda, a course-management habit worth stealing, and a million-dollar milestone.',
     leadText:
       'Here is a swing traced in the Tracer app: the ball leaves the club, and Tracer draws its flight onto the video. Film yours this weekend and see the line.',
@@ -39,8 +39,8 @@ export const SUNDAY_ISSUES: readonly SundayIssue[] = [
         ],
       },
       {
-        key: 'discGolf',
-        heading: 'Disc golf',
+        key: 'tracer',
+        heading: 'For Tracer: disc golf',
         items: [
           {
             headline: 'The first million',
