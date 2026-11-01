@@ -715,7 +715,7 @@ export const TUTORIALS: readonly Tutorial[] = [
       {
         heading: 'Where the distance comes from',
         blocks: [
-          p('A video alone does not say how far a ball flew. Use a distance measured separately from Tracer. A launch monitor may report carry and total, although total can be modeled. GPS tracking can estimate the distance from the starting position to the finishing position; that does not identify carry unless the landing point is known. A laser needs a visible, reliable target. For a short putt, use a tape, or label a paced length as approximate.'),
+          p('A video alone does not say how far a ball flew. Use a distance measured separately from Tracer. A launch monitor may report carry and total, although total can be modeled. A GPS app can estimate how far the finishing position is from the starting position; that does not identify carry unless the landing point is known. A laser needs a visible, reliable target. For a short putt, use a tape, or label a paced length as approximate.'),
           linked('If you already play with ', GOLF_GPS_LINK, ' Pro, marking the shot during the round gives you a number to type in later.'),
         ],
       },
