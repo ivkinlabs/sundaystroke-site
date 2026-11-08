@@ -1,0 +1,6 @@
+<?xml version="1.0"?><rss version="2.0"><channel><title>Feed</title>
+<item><title><![CDATA[ Smith wins in &amp; out ]]></title><link>https://example.com/a?utm_source=rss&amp;id=3</link>
+<description>&lt;p&gt;Smith won by two.&lt;/p&gt;</description><pubDate>Tue, 03 Nov 2026 16:22:25 +0000</pubDate></item>
+<item><title>No date</title><link>https://example.com/b</link></item>
+<item><title>Plain http</title><link>http://example.com/c</link><pubDate>Tue, 03 Nov 2026 16:22:25 +0000</pubDate></item>
+</channel></rss>
