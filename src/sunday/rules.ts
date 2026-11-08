@@ -1,5 +1,5 @@
-import { displaySunday, isSunday } from './calendar.ts';
-import { DISC_GOLF_WORDS, MAX_ITEMS, SECTION_HEADINGS } from './sources.ts';
+import { addDays, displaySunday, isSunday, madridMidnight } from './calendar.ts';
+import { DISC_GOLF_WORDS, ITEM_WINDOW_DAYS, MAX_ITEMS, SECTION_HEADINGS } from './sources.ts';
 import type { Candidate, CandidateFile } from './types.ts';
 import type { SundayIssue, SundaySection } from '../types/sunday.ts';
 
@@ -9,7 +9,8 @@ export interface RuleContext {
   mediaExists: (sitePath: string) => boolean;
 }
 
-const ABBREVIATIONS: RegExp = /\b(?:Mr|Mrs|Ms|Dr|St|Jr|Sr|vs|No|U\.S|U\.K|a\.m|p\.m)\./g;
+const ABBREVIATIONS: RegExp = /\b(?:Mr|Mrs|Ms|Dr|St|Jr|Sr|vs|No|U\.S|U\.K|a\.m|p\.m|Jan|Feb|Mar|Apr|Jun|Jul|Aug|Sep|Sept|Oct|Nov|Dec|[A-Z])\./g;
+const SITE_MEDIA: RegExp = /^\/media\/[a-z0-9_-]+(?:\/[a-z0-9_-]+)*\.(?:mp4|jpg)$/;
 const SENTENCE_END: RegExp = /[.!?…]+["”’)]*(?=\s|$)/g;
 const SUMMARY_CHARS: number = 160;
 const TITLE_SUFFIX: string = ' | SundayStroke';
@@ -37,16 +38,26 @@ function headerProblems(issue: SundayIssue, context: RuleContext): string[] {
   if (issue.leadText.trim() === '') problems.push('the lead has no text');
   if (issue.leadClips.length === 0) problems.push('the lead has no clip of ours');
   for (const clip of issue.leadClips) {
+    if (!clip.src.endsWith('.mp4') || !clip.poster.endsWith('.jpg')) problems.push(`lead clip ${clip.src} needs an .mp4 and a .jpg poster`);
     for (const path of [clip.src, clip.poster]) {
-      if (!path.startsWith('/media/') || !context.mediaExists(path)) problems.push(`lead media ${path} is not one of the site's own files`);
+      if (!SITE_MEDIA.test(path) || !context.mediaExists(path)) problems.push(`lead media ${path} is not one of the site's own files`);
     }
   }
-  const outsideTracer = [issue.title, issue.pageTitle, issue.summary, issue.leadText];
+  const outsideTracer = [issue.title, issue.pageTitle, issue.summary, issue.leadText, ...issue.leadClips.map((clip) => clip.label)];
   if (outsideTracer.some((text) => DISC_GOLF_WORDS.test(text))) problems.push('disc golf is named outside the Tracer section');
   return problems;
 }
 
-function itemProblems(section: SundaySection, byUrl: ReadonlyMap<string, Candidate>, seen: Set<string>): string[] {
+interface ItemWindow {
+  from: Date;
+  to: Date;
+}
+
+function itemWindow(issueDate: string): ItemWindow {
+  return { from: madridMidnight(addDays(issueDate, -ITEM_WINDOW_DAYS)), to: madridMidnight(addDays(issueDate, 1)) };
+}
+
+function itemProblems(section: SundaySection, byUrl: ReadonlyMap<string, Candidate>, seen: Set<string>, window: ItemWindow): string[] {
   const problems: string[] = [];
   if (section.heading !== SECTION_HEADINGS[section.key]) problems.push(`the ${section.key} heading must be "${SECTION_HEADINGS[section.key]}"`);
   if (section.items.length === 0) problems.push(`the ${section.key} section is empty; drop it`);
@@ -65,6 +76,8 @@ function itemProblems(section: SundaySection, byUrl: ReadonlyMap<string, Candida
     }
     if (candidate.section !== section.key) problems.push(`${label} comes from ${candidate.sourceName}, which belongs in the ${candidate.section} section`);
     if (item.sourceLabel !== candidate.sourceName) problems.push(`${label} must credit "${candidate.sourceName}"`);
+    const published = new Date(candidate.published);
+    if (!(published >= window.from && published < window.to)) problems.push(`${label} was published ${candidate.published}, outside the ${ITEM_WINDOW_DAYS} days before the issue`);
   }
   return problems;
 }
@@ -78,6 +91,7 @@ export function issueProblems(issue: SundayIssue, context: RuleContext): readonl
   if (total < 1 || total > MAX_ITEMS) problems.push(`${total} items; 1 to ${MAX_ITEMS} allowed`);
   const byUrl = new Map(context.candidates.candidates.map((candidate) => [candidate.link, candidate]));
   const seen = new Set<string>();
-  for (const section of issue.sections) problems.push(...itemProblems(section, byUrl, seen));
+  const window = isSunday(issue.slug) ? itemWindow(issue.slug) : { from: new Date(0), to: new Date(0) };
+  for (const section of issue.sections) problems.push(...itemProblems(section, byUrl, seen, window));
   return problems;
 }

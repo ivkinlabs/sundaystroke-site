@@ -1,4 +1,4 @@
-import { parseIssue, sortedIssues } from '../sunday/issueGuard.ts';
+import { parseIssue, sortedIssues } from '../lib/sundayIssue.ts';
 import type { SundayIssue } from '../types/sunday.ts';
 
 const ISSUE_FILES: Readonly<Record<string, string>> = import.meta.glob<string>('./sunday/*.json', {

@@ -1,4 +1,5 @@
-import type { ItemVerdict, VerdictFile } from './types.ts';
+import { hasExactKeys, hasStrings, isRecord } from '../lib/guards.ts';
+import type { ItemVerdict } from './types.ts';
 import type { SundayIssue } from '../types/sunday.ts';
 
 export interface CheckedIssue {
@@ -6,40 +7,42 @@ export interface CheckedIssue {
   rejected: readonly ItemVerdict[];
 }
 
-const VERDICT_KINDS: ReadonlySet<string> = new Set(['confirmed', 'rejected']);
+const VERDICT_KEYS: readonly string[] = ['sourceUrl', 'verdict', 'reason'];
+const FILE_KEYS: readonly string[] = ['issueDate', 'verdicts'];
 
 function isVerdict(value: unknown): value is ItemVerdict {
-  if (typeof value !== 'object' || value === null) return false;
-  const fields: Readonly<Record<string, unknown>> = Object.fromEntries(Object.entries(value));
   return (
-    typeof fields.sourceUrl === 'string' &&
-    typeof fields.reason === 'string' &&
-    typeof fields.verdict === 'string' &&
-    VERDICT_KINDS.has(fields.verdict)
+    isRecord(value) &&
+    hasExactKeys(value, VERDICT_KEYS) &&
+    hasStrings(value, VERDICT_KEYS) &&
+    (value.verdict === 'confirmed' || value.verdict === 'rejected')
   );
 }
 
-export function parseVerdicts(json: string): VerdictFile {
-  const value: unknown = JSON.parse(json);
-  if (typeof value !== 'object' || value === null) throw new Error('verdicts are not an object');
-  const fields: Readonly<Record<string, unknown>> = Object.fromEntries(Object.entries(value));
-  const { issueDate, verdicts } = fields;
-  if (typeof issueDate !== 'string' || !Array.isArray(verdicts) || !verdicts.every(isVerdict)) {
-    throw new Error('verdicts need issueDate and a list of { sourceUrl, verdict, reason }');
-  }
-  return { issueDate, verdicts };
+export function itemUrls(issue: SundayIssue): readonly string[] {
+  return issue.sections.flatMap((section) => section.items.map((item) => item.sourceUrl));
 }
 
-export function applyVerdicts(issue: SundayIssue, file: VerdictFile): CheckedIssue {
-  if (file.issueDate !== issue.slug) throw new Error(`verdicts are for ${file.issueDate}, not ${issue.slug}`);
-  const byUrl = new Map(file.verdicts.map((verdict) => [verdict.sourceUrl, verdict]));
-  const urls = issue.sections.flatMap((section) => section.items.map((item) => item.sourceUrl));
-  const missing = urls.filter((url) => !byUrl.has(url));
-  if (missing.length > 0) throw new Error(`no verdict for ${missing.join(', ')}`);
-  const rejected = urls.flatMap((url) => {
-    const verdict = byUrl.get(url);
-    return verdict !== undefined && verdict.verdict === 'rejected' ? [verdict] : [];
-  });
+export function parseVerdicts(json: string, issue: SundayIssue): readonly ItemVerdict[] {
+  const value: unknown = JSON.parse(json);
+  if (!isRecord(value) || !hasExactKeys(value, FILE_KEYS) || !Array.isArray(value.verdicts) || !value.verdicts.every(isVerdict)) {
+    throw new Error('the check must answer { issueDate, verdicts: [{ sourceUrl, verdict, reason }] }');
+  }
+  if (value.issueDate !== issue.slug) throw new Error(`the check answered for ${String(value.issueDate)}, not ${issue.slug}`);
+  const verdicts: readonly ItemVerdict[] = value.verdicts;
+  const urls = itemUrls(issue);
+  const answered = verdicts.map((verdict) => verdict.sourceUrl);
+  const duplicates = answered.filter((url, at) => answered.indexOf(url) !== at);
+  const missing = urls.filter((url) => !answered.includes(url));
+  const extra = answered.filter((url) => !urls.includes(url));
+  if (duplicates.length > 0) throw new Error(`the check answered twice for ${duplicates.join(', ')}`);
+  if (missing.length > 0) throw new Error(`the check gave no verdict for ${missing.join(', ')}`);
+  if (extra.length > 0) throw new Error(`the check answered for items the issue doesn't have: ${extra.join(', ')}`);
+  return verdicts;
+}
+
+export function applyVerdicts(issue: SundayIssue, verdicts: readonly ItemVerdict[]): CheckedIssue {
+  const rejected = verdicts.filter((verdict) => verdict.verdict === 'rejected');
   const rejectedUrls = new Set(rejected.map((verdict) => verdict.sourceUrl));
   const sections = issue.sections
     .map((section) => ({ ...section, items: section.items.filter((item) => !rejectedUrls.has(item.sourceUrl)) }))

@@ -17,10 +17,16 @@ const ENTITIES: Readonly<Record<string, string>> = {
   hellip: '…',
 };
 
+const MAX_CODE_POINT: number = 0x10ffff;
+
+function codePoint(whole: string, code: string): string {
+  const value = code.startsWith('#x') || code.startsWith('#X') ? parseInt(code.slice(2), 16) : parseInt(code.slice(1), 10);
+  return value > 0 && value <= MAX_CODE_POINT ? String.fromCodePoint(value) : whole;
+}
+
 export function decodeEntities(text: string): string {
   return text.replace(/&(#x[0-9a-f]+|#\d+|[a-z]+);/gi, (whole: string, code: string) => {
-    if (code.startsWith('#x') || code.startsWith('#X')) return String.fromCodePoint(parseInt(code.slice(2), 16));
-    if (code.startsWith('#')) return String.fromCodePoint(parseInt(code.slice(1), 10));
+    if (code.startsWith('#')) return codePoint(whole, code);
     return ENTITIES[code.toLowerCase()] ?? whole;
   });
 }
@@ -30,10 +36,14 @@ function unwrapCdata(text: string): string {
 }
 
 export function plainText(markup: string): string {
-  const once = decodeEntities(unwrapCdata(markup));
-  return decodeEntities(once.replace(/<script[\s\S]*?<\/script>|<style[\s\S]*?<\/style>/gi, ' ').replace(/<[^>]+>/g, ' '))
+  const html = decodeEntities(unwrapCdata(markup));
+  return decodeEntities(html.replace(/<script[\s\S]*?<\/script>|<style[\s\S]*?<\/style>/gi, ' ').replace(/<[^>]+>/g, ' '))
     .replace(/\s+/g, ' ')
     .trim();
+}
+
+function linkText(markup: string): string {
+  return decodeEntities(unwrapCdata(markup)).trim();
 }
 
 function field(block: string, names: readonly string[]): string | null {
@@ -46,9 +56,10 @@ function field(block: string, names: readonly string[]): string | null {
 
 function atomLink(block: string): string | null {
   const links = [...block.matchAll(/<link\b([^>]*)\/?>/gi)].map((match) => match[1] ?? '');
-  const preferred = links.find((attributes) => !/rel="(?!alternate)/i.test(attributes)) ?? links[0];
+  const preferred = links.find((attributes) => !/rel=["'](?!alternate)/i.test(attributes)) ?? links[0];
   if (preferred === undefined) return null;
-  return /href="([^"]+)"/i.exec(preferred)?.[1] ?? null;
+  const href = /href=(["'])(.+?)\1/i.exec(preferred)?.[2];
+  return href === undefined ? null : decodeEntities(href);
 }
 
 export function excerptOf(text: string): string {
@@ -59,7 +70,7 @@ export function excerptOf(text: string): string {
 }
 
 export function cleanLink(link: string): string {
-  const url = new URL(decodeEntities(link).trim());
+  const url = new URL(link.trim());
   for (const key of [...url.searchParams.keys()]) {
     if (key.startsWith('utm_')) url.searchParams.delete(key);
   }
@@ -69,7 +80,7 @@ export function cleanLink(link: string): string {
 function entry(block: string): FeedEntry | null {
   const title = field(block, ['title']);
   const rawLink = field(block, ['link']);
-  const link = rawLink !== null && rawLink.trim() !== '' ? plainText(rawLink) : atomLink(block);
+  const link = rawLink !== null && rawLink.trim() !== '' ? linkText(rawLink) : atomLink(block);
   const date = field(block, ['pubDate', 'published', 'updated', 'dc:date']);
   if (title === null || link === null || date === null) return null;
   const published = new Date(plainText(date));

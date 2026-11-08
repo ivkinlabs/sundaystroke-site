@@ -4,7 +4,7 @@ set -euo pipefail
 NAME="golfgps sunday post"
 REPO="/Users/ivkin/my/sundaystroke-site"
 FACTORY="/Users/ivkin/my/factory-runtime"
-TRIGGER="30 8,15 * * *"
+TRIGGER="30 8,15 * * 0,1,5,6"
 PROMPT="You are the weekly Sunday post run for sundaystroke.com. This is an unattended run. Read automation/sunday-post.md in this worktree and follow it exactly."
 
 [ -d "$REPO/.git" ] || { echo "no sundaystroke-site checkout at $REPO" >&2; exit 1; }

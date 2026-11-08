@@ -23,16 +23,26 @@ export function madridDay(now: Date): MadridDay {
     if (found === undefined) throw new Error(`No ${type} in the Madrid date`);
     return found.value;
   };
+  const weekday = WEEKDAYS.indexOf(part('weekday'));
+  if (weekday < 0) throw new Error(`Unknown weekday ${part('weekday')}`);
   return {
     date: `${part('year')}-${part('month')}-${part('day')}`,
-    weekday: WEEKDAYS.indexOf(part('weekday')),
+    weekday,
     hour: Number(part('hour')),
   };
 }
 
 function utcDay(date: string): Date {
-  if (!/^\d{4}-\d{2}-\d{2}$/.test(date)) throw new Error(`Not a yyyy-mm-dd date: ${date}`);
-  return new Date(`${date}T00:00:00Z`);
+  const day = new Date(`${date}T00:00:00Z`);
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(date) || Number.isNaN(day.getTime()) || day.toISOString().slice(0, 10) !== date) {
+    throw new Error(`Not a yyyy-mm-dd date: ${date}`);
+  }
+  return day;
+}
+
+export function issueDateArgument(value: string): string {
+  if (!isSunday(value)) throw new Error(`${value} is not a Sunday`);
+  return value;
 }
 
 export function addDays(date: string, days: number): string {
@@ -58,7 +68,9 @@ export function sundayBefore(date: string): string {
 export function displaySunday(date: string): string {
   if (!isSunday(date)) throw new Error(`${date} is not a Sunday`);
   const day = utcDay(date);
-  return `Sunday ${day.getUTCDate()} ${MONTHS[day.getUTCMonth()] ?? ''} ${day.getUTCFullYear()}`;
+  const month = MONTHS[day.getUTCMonth()];
+  if (month === undefined) throw new Error(`No month for ${date}`);
+  return `Sunday ${day.getUTCDate()} ${month} ${day.getUTCFullYear()}`;
 }
 
 export function madridMidnight(date: string): Date {

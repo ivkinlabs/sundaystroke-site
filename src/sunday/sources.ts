@@ -19,8 +19,11 @@ export const PUBLISH_HOUR: number = 8;
 export const SITE_ORIGIN: string = 'https://sundaystroke.com';
 export const SITE_REPO: string = 'ivkinlabs/sundaystroke-site';
 export const FACTORY_APP: string = 'golfgps';
+export const FACTORY_RUNTIME: string = '/Users/ivkin/my/factory-runtime';
+export const FIRST_AUTOMATED_ISSUE: string = '2026-11-15';
+export const CHECKER_MODEL: string = 'claude-opus-5-5';
 export const SECTION_HEADINGS: Readonly<Record<'golf' | 'tracer', string>> = {
   golf: 'Golf',
   tracer: 'For Tracer: disc golf',
 };
-export const DISC_GOLF_WORDS: RegExp = /disc\s*golf|\bPDGA\b|\bDGPT\b|\bdiscs?\b/i;
+export const DISC_GOLF_WORDS: RegExp = /disc\s*golf|\bPDGA\b|\bDGPT\b/i;

@@ -83,4 +83,28 @@ describe('every published issue', () => {
       expect(problems, issue.slug).toEqual([]);
     });
   });
+
+  it('rejects a story published outside the seven days before the issue', () => {
+    const base = candidatesFor(ISSUE_TWO);
+    const stale = { ...base, candidates: base.candidates.map((candidate, at) => (at === 0 ? { ...candidate, published: '2026-11-07T10:00:00.000Z' } : candidate)) };
+    const future = { ...base, candidates: base.candidates.map((candidate, at) => (at === 0 ? { ...candidate, published: '2026-11-16T10:00:00.000Z' } : candidate)) };
+    expect(issueProblems(ISSUE_TWO, context(stale)).some((problem) => problem.includes('outside the 7 days'))).toBe(true);
+    expect(issueProblems(ISSUE_TWO, context(future)).some((problem) => problem.includes('outside the 7 days'))).toBe(true);
+  });
+
+  it('accepts only the site\'s own clip files, never a path out of the media folder', () => {
+    const escaping = { ...ISSUE_TWO, leadClips: [{ src: '/media/../../secret.mp4', poster: '/media/learn/golf-result.jpg', label: 'Traced' }] };
+    const poster = { ...ISSUE_TWO, leadClips: [{ src: '/media/learn/golf-result.mp4', poster: '/media/learn/golf-result.mp4', label: 'Traced' }] };
+    expect(issueProblems(escaping, { ...context(), mediaExists: () => true }).some((problem) => problem.includes("site's own files"))).toBe(true);
+    expect(issueProblems(poster, context()).some((problem) => problem.includes('.jpg poster'))).toBe(true);
+  });
+
+  it('keeps disc golf out of the lead clip labels', () => {
+    const labelled = { ...ISSUE_TWO, leadClips: [{ src: '/media/learn/golf-result.mp4', poster: '/media/learn/golf-result.jpg', label: 'Disc golf' }] };
+    expect(issueProblems(labelled, context())).toContain('disc golf is named outside the Tracer section');
+  });
+
+  it('counts initials and month abbreviations as part of a sentence', () => {
+    expect(sentenceCount('J. Smith won on Oct. 3 by two shots. He led all week.')).toBe(2);
+  });
 });

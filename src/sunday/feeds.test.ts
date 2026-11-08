@@ -24,4 +24,9 @@ describe('parseFeed', () => {
     expect(excerpt.length).toBeLessThanOrEqual(EXCERPT_CHARS + 1);
     expect(excerpt.endsWith('word…')).toBe(true);
   });
+
+  it('reads single-quoted Atom links and keeps a feed with an out-of-range entity', () => {
+    const xml = "<feed><entry><title>Quoted &#99999999;</title><link rel='alternate' href='https://example.org/q?a=1&amp;b=2'/><updated>2026-11-05T10:00:00Z</updated></entry></feed>";
+    expect(parseFeed(xml)).toEqual([{ title: 'Quoted &#99999999;', link: 'https://example.org/q?a=1&b=2', published: '2026-11-05T10:00:00.000Z', excerpt: '' }]);
+  });
 });

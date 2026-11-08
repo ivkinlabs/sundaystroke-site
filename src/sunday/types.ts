@@ -39,8 +39,10 @@ export interface ItemVerdict {
   reason: string;
 }
 
-export interface VerdictFile {
+export interface CheckRecord {
   issueDate: string;
+  issueHash: string;
+  checkedAt: string;
   verdicts: readonly ItemVerdict[];
 }
 
@@ -52,11 +54,13 @@ export interface MadridDay {
 
 export type Step = 'find' | 'write' | 'check' | 'open-pr' | 'publish' | 'alert-missed' | 'report';
 
+export type IssueState = 'none' | 'open-pr' | 'merged' | 'live';
+
 export interface PlanFacts {
   today: MadridDay;
-  issueLive: boolean;
-  candidatesCollectedOn: string | null;
-  pullOpen: boolean;
+  issueState: IssueState;
+  candidatesCollected: boolean;
+  announced: boolean;
   missedAlerted: boolean;
   publishedIssues: number;
   reportSent: boolean;

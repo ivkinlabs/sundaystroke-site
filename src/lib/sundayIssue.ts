@@ -1,15 +1,6 @@
+import { hasStrings, isRecord } from './guards.ts';
 import type { SundayIssue, SundayItem, SundaySection } from '../types/sunday.ts';
 import type { Clip } from '../types/tutorial.ts';
-
-type Fields = Readonly<Record<string, unknown>>;
-
-function isRecord(value: unknown): value is Fields {
-  return typeof value === 'object' && value !== null && !Array.isArray(value);
-}
-
-function hasStrings(value: Fields, keys: readonly string[]): boolean {
-  return keys.every((key) => typeof value[key] === 'string');
-}
 
 function isClip(value: unknown): value is Clip {
   return isRecord(value) && hasStrings(value, ['src', 'poster', 'label']);
