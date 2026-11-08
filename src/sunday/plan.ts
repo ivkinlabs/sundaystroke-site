@@ -5,6 +5,8 @@ import type { MadridDay, Plan, PlanFacts, Step } from './types.ts';
 const FRIDAY: number = 5;
 const SATURDAY: number = 6;
 const SUNDAY: number = 0;
+const MONDAY: number = 1;
+const LATE_ALERT_HOUR: number = 15;
 
 function inIssueWeekend(today: MadridDay): boolean {
   return today.weekday === FRIDAY || today.weekday === SATURDAY || today.weekday === SUNDAY;
@@ -24,8 +26,11 @@ function issueSteps(facts: PlanFacts): Step[] {
     case 'live':
     case 'merged':
       return facts.announced ? [] : ['publish'];
-    case 'open-pr':
-      return today.weekday !== FRIDAY && today.weekday !== SATURDAY && publishTimeReached(today) ? ['publish'] : [];
+    case 'open-pr': {
+      if (today.weekday === FRIDAY || today.weekday === SATURDAY || !publishTimeReached(today)) return [];
+      const late = today.weekday === MONDAY && today.hour >= LATE_ALERT_HOUR && !facts.missedAlerted;
+      return late ? ['alert-missed', 'publish'] : ['publish'];
+    }
     case 'none': {
       if (!inIssueWeekend(today)) return facts.missedAlerted ? [] : ['alert-missed'];
       const steps: Step[] = facts.candidatesCollected ? [] : ['find'];

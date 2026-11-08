@@ -99,6 +99,12 @@ describe('every published issue', () => {
     expect(issueProblems(poster, context()).some((problem) => problem.includes('.jpg poster'))).toBe(true);
   });
 
+  it('rejects copy that breaks the site\'s copy rules', () => {
+    expect(issueProblems({ ...ISSUE_TWO, leadText: 'Our shot tracer clip.' }, context())).toContain('the copy puts "shot" before "tracer"');
+    expect(issueProblems({ ...ISSUE_TWO, summary: 'Golf meets baseball.' }, context())).toContain('the copy names baseball');
+    expect(issueProblems({ ...ISSUE_TWO, leadText: 'Tracer measures the carry distance.' }, context())).toContain('the copy claims something measures distance');
+  });
+
   it('keeps disc golf out of the lead clip labels', () => {
     const labelled = { ...ISSUE_TWO, leadClips: [{ src: '/media/learn/golf-result.mp4', poster: '/media/learn/golf-result.jpg', label: 'Disc golf' }] };
     expect(issueProblems(labelled, context())).toContain('disc golf is named outside the Tracer section');

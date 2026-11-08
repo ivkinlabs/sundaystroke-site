@@ -32,7 +32,7 @@ Your working directory is a fresh worktree of the site on `origin/main`. Every s
 
 ## open-pr
 
-`node src/sunday/cli.ts open-pr --date D` commits the checked issue on its own branch and opens the pull request, listing each kept and rejected item with the checker's reason.
+`node src/sunday/cli.ts open-pr --date D` restores the checked issue (so a later run can open the pull request without writing it again), builds the site, commits the issue on its own branch and opens the pull request, listing each kept and rejected item with the checker's reason.
 
 ## publish
 

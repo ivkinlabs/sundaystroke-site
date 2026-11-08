@@ -29,7 +29,7 @@ export function pullProblems(issueDate: string, pull: PullHead, content: string)
 function mergeChecked(issueDate: string, pull: PullHead): SundayIssue {
   fetchCommit(pull.headSha);
   const content = blobAt(pull.headSha, statePaths(issueDate).issueFile);
-  const problems = pullProblems(issueDate, pull, `${content}\n`);
+  const problems = pullProblems(issueDate, pull, content);
   if (problems.length > 0) throw new Error(`the pull request for ${issueDate} can't be published:\n- ${problems.join('\n- ')}`);
   mergePull(pull);
   return parseIssue(content, issueDate);
