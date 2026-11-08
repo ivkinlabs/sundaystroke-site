@@ -2,7 +2,7 @@ import { existsSync, readFileSync, readdirSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { parseIssue, sortedIssues } from '../lib/sundayIssue.ts';
 import { runChecker, replyJson } from './checker.ts';
-import { git, gh } from './exec.ts';
+import { BUILD_TIMEOUT_MS, git, gh, run } from './exec.ts';
 import { fetchMain, issueBranch, openPull, remoteBranchSha } from './github.ts';
 import { pullBody } from './pullBody.ts';
 import { issueProblems } from './rules.ts';
@@ -73,6 +73,7 @@ export async function commandCheck(issueDate: string): Promise<void> {
   writeFileSync(paths.issueFile, content);
   validated(issueDate);
   const record: CheckRecord = { issueDate, issueHash: sha256(content), checkedAt: new Date().toISOString(), verdicts };
+  writeFileSync(paths.checked, content);
   writeJson(paths.check, record);
   for (const verdict of verdicts) console.log(`${verdict.verdict} ${verdict.sourceUrl}: ${verdict.reason}`);
 }
@@ -87,13 +88,15 @@ export function checkedContent(issueDate: string, content: string): CheckRecord 
 
 export function commandOpenPull(issueDate: string): void {
   const paths = statePaths(issueDate);
-  const issue = validated(issueDate);
-  const content = readFileSync(paths.issueFile, 'utf8');
-  const record = checkedContent(issueDate, content);
   if (openPull(issueDate) !== null) {
     console.log(`a pull request for ${issueBranch(issueDate)} is already open`);
     return;
   }
+  const content = readFileSync(paths.checked, 'utf8');
+  const record = checkedContent(issueDate, content);
+  writeFileSync(paths.issueFile, content);
+  const issue = validated(issueDate);
+  run('npm', ['run', 'build'], BUILD_TIMEOUT_MS);
   const branch = issueBranch(issueDate);
   if (remoteBranchSha(branch) !== null) git(['push', '-q', 'origin', '--delete', branch]);
   git(['switch', '-c', branch]);

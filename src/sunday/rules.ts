@@ -1,5 +1,5 @@
 import { addDays, displaySunday, isSunday, madridMidnight } from './calendar.ts';
-import { DISC_GOLF_WORDS, ITEM_WINDOW_DAYS, MAX_ITEMS, SECTION_HEADINGS } from './sources.ts';
+import { COPY_RULES, DISC_GOLF_WORDS, ITEM_WINDOW_DAYS, MAX_ITEMS, SECTION_HEADINGS } from './sources.ts';
 import type { Candidate, CandidateFile } from './types.ts';
 import type { SundayIssue, SundaySection } from '../types/sunday.ts';
 
@@ -82,8 +82,13 @@ function itemProblems(section: SundaySection, byUrl: ReadonlyMap<string, Candida
   return problems;
 }
 
+function copyProblems(issue: SundayIssue): string[] {
+  const texts = [issue.title, issue.pageTitle, issue.summary, issue.leadText, ...issue.leadClips.map((clip) => clip.label), ...issue.sections.map(sectionText)];
+  return COPY_RULES.filter((rule) => texts.some((text) => rule.pattern.test(text))).map((rule) => `the copy ${rule.reason}`);
+}
+
 export function issueProblems(issue: SundayIssue, context: RuleContext): readonly string[] {
-  const problems = headerProblems(issue, context);
+  const problems = [...headerProblems(issue, context), ...copyProblems(issue)];
   const keys = issue.sections.map((section) => section.key);
   const ordered = SECTION_ORDER.filter((key) => keys.some((present) => present === key));
   if (new Set(keys).size !== keys.length || keys.join() !== ordered.join()) problems.push('sections must be Golf, then Tracer, each at most once');

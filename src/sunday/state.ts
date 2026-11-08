@@ -15,6 +15,7 @@ export interface StatePaths {
   dir: string;
   candidates: string;
   check: string;
+  checked: string;
   announced: string;
   missedAlert: string;
   stuckAlert: string;
@@ -27,6 +28,7 @@ export function statePaths(issueDate: string): StatePaths {
     dir,
     candidates: join(dir, 'candidates.json'),
     check: join(dir, 'check.json'),
+    checked: join(dir, 'checked-issue.json'),
     announced: join(dir, 'announced.json'),
     missedAlert: join(dir, 'missed-alerted.json'),
     stuckAlert: join(dir, 'stuck-alerted.json'),

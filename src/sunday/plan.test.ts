@@ -45,6 +45,11 @@ describe('plan', () => {
     expect(plan(at('2026-11-16', 1, 8, { issueState: 'open-pr' })).steps).toEqual(['publish']);
   });
 
+  it('tells the owner once on Monday afternoon when a pull request still has not published', () => {
+    expect(plan(at('2026-11-16', 1, 15, { issueState: 'open-pr' })).steps).toEqual(['alert-missed', 'publish']);
+    expect(plan(at('2026-11-16', 1, 15, { issueState: 'open-pr', missedAlerted: true })).steps).toEqual(['publish']);
+  });
+
   it('does nothing once the issue is live and announced', () => {
     expect(plan(at('2026-11-15', 0, 15, { issueState: 'live', announced: true })).steps).toEqual([]);
   });

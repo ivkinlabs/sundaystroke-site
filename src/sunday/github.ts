@@ -1,6 +1,6 @@
 import { hasStrings, isRecord } from '../lib/guards.ts';
 import { parseIssue, sortedIssues } from '../lib/sundayIssue.ts';
-import { gh, git } from './exec.ts';
+import { COMMAND_TIMEOUT_MS, gh, git, runRaw } from './exec.ts';
 import { SITE_REPO } from './sources.ts';
 import { ISSUES_DIR } from './state.ts';
 import type { SundayIssue } from '../types/sunday.ts';
@@ -65,7 +65,7 @@ export function pathExistsAt(rev: string, path: string): boolean {
 }
 
 export function blobAt(rev: string, path: string): string {
-  return git(['show', `${rev}:${path}`]);
+  return runRaw('git', ['show', `${rev}:${path}`], COMMAND_TIMEOUT_MS);
 }
 
 export function issuesOnMain(): readonly SundayIssue[] {

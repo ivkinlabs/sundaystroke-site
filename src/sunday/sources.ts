@@ -27,3 +27,14 @@ export const SECTION_HEADINGS: Readonly<Record<'golf' | 'tracer', string>> = {
   tracer: 'For Tracer: disc golf',
 };
 export const DISC_GOLF_WORDS: RegExp = /disc\s*golf|\bPDGA\b|\bDGPT\b/i;
+
+export interface CopyRule {
+  pattern: RegExp;
+  reason: string;
+}
+
+export const COPY_RULES: readonly CopyRule[] = [
+  { pattern: /baseball/i, reason: 'names baseball' },
+  { pattern: /shot\s*tracer/i, reason: 'puts "shot" before "tracer"' },
+  { pattern: /\b(?:measures?|measuring|calculates?|calculating|tracks?|tracking)\b[^.]{0,40}\bdistance/i, reason: 'claims something measures distance' },
+];
