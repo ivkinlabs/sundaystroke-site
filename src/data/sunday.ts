@@ -1,61 +1,12 @@
-import type { SundayIssue } from '../types/sunday';
+import { parseIssue, sortedIssues } from '../lib/sundayIssue.ts';
+import type { SundayIssue } from '../types/sunday.ts';
 
-export const SUNDAY_ISSUES: readonly SundayIssue[] = [
-  {
-    slug: '2026-11-01',
-    number: 1,
-    date: 'Sunday 1 November 2026',
-    title: 'The Sunday post, issue 1',
-    pageTitle: 'Bermuda Playoff, McDowell’s Exit & a Million-Dollar Milestone | SundayStroke',
-    summary: 'A Monday play-off in Bermuda, a course-management habit worth stealing, and a million-dollar milestone.',
-    leadText:
-      'Here is a swing traced in the Tracer app: the ball leaves the club, and Tracer draws its flight onto the video. Film yours this weekend and see the line.',
-    leadClips: [
-      { src: '/media/learn/golf-result.mp4', poster: '/media/learn/golf-result.jpg', label: 'Traced' },
-    ],
-    sections: [
-      {
-        key: 'golf',
-        heading: 'Golf',
-        items: [
-          {
-            headline: 'A Monday finish in Bermuda',
-            body: 'Austin Smotherman beat Seamus Power in a three-hole play-off on Monday, 26 October, to win the weather-shortened Butterfield Bermuda Championship, his second consecutive PGA Tour victory.',
-            sourceLabel: 'Golf Channel',
-            sourceUrl: 'https://www.golfchannel.com/pga-tour/news/austin-smotherman-ousts-seamus-power-in-bermuda-playoff-for-second-straight-win',
-          },
-          {
-            headline: 'McDowell declines LIV 2.0',
-            body: 'Graeme McDowell says he will not join LIV 2.0, ending his involvement after four years with the league.',
-            sourceLabel: 'RTÉ',
-            sourceUrl: 'https://www.rte.ie/sport/golf/2026/1026/1596881-mcdowell-becomes-latest-player-to-abandon-liv-2-0/',
-          },
-          {
-            headline: 'Aim for the middle',
-            body: 'One simple course-management habit: pick a target that leaves room for your usual miss. For your next round, choose the part of the green that gives that miss the most room, and check both the front and back distances before choosing a club.',
-            sourceLabel: 'GOLF.com',
-            sourceUrl: 'https://golf.com/instruction/crucial-course-management-mistake-costing-strokes/',
-          },
-        ],
-      },
-      {
-        key: 'tracer',
-        heading: 'For Tracer: disc golf',
-        items: [
-          {
-            headline: 'The first million',
-            body: 'Ricky Wysocki became the first disc golfer to exceed $1 million in career winnings from PDGA-sanctioned competition.',
-            sourceLabel: 'DGPT',
-            sourceUrl: 'https://www.dgpt.com/news/ricky-wysocki-becomes-first-disc-golfer-to-earn-1-million/',
-          },
-          {
-            headline: 'A new cup at Ivy Hill',
-            body: 'Silva Saarinen and Gannon Buhr won the women’s and men’s titles at the inaugural Powerball Cup at Ivy Hill. The event offered a record $350,000 purse.',
-            sourceLabel: 'DGPT',
-            sourceUrl: 'https://www.dgpt.com/news/2026-powerball-cup-recap/',
-          },
-        ],
-      },
-    ],
-  },
-];
+const ISSUE_FILES: Readonly<Record<string, string>> = import.meta.glob<string>('./sunday/*.json', {
+  eager: true,
+  query: '?raw',
+  import: 'default',
+});
+
+export const SUNDAY_ISSUES: readonly SundayIssue[] = sortedIssues(
+  Object.entries(ISSUE_FILES).map(([path, json]) => parseIssue(json, path)),
+);

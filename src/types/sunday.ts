@@ -1,4 +1,4 @@
-import type { Clip } from './tutorial';
+import type { Clip } from './tutorial.ts';
 
 export type SundaySectionKey = 'golf' | 'tracer';
 
