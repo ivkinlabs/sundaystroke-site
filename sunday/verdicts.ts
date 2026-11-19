@@ -1,6 +1,6 @@
-import { hasExactKeys, hasStrings, isRecord } from '../lib/guards.ts';
+import { hasExactKeys, hasStrings, isRecord } from '../src/lib/guards.ts';
 import type { ItemVerdict } from './types.ts';
-import type { SundayIssue } from '../types/sunday.ts';
+import type { SundayIssue } from '../src/types/sunday.ts';
 
 export interface CheckedIssue {
   issue: SundayIssue;

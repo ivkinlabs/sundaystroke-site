@@ -1,12 +1,13 @@
-import { hasStrings, isRecord } from '../lib/guards.ts';
-import { parseIssue, sortedIssues } from '../lib/sundayIssue.ts';
+import { hasStrings, isRecord } from '../src/lib/guards.ts';
+import { parseIssue, sortedIssues } from '../src/lib/sundayIssue.ts';
 import { COMMAND_TIMEOUT_MS, gh, git, runRaw } from './exec.ts';
 import { SITE_REPO } from './sources.ts';
 import { ISSUES_DIR } from './state.ts';
-import type { SundayIssue } from '../types/sunday.ts';
+import type { SundayIssue } from '../src/types/sunday.ts';
 
 const MAIN: string = 'origin/main';
 const SHA: RegExp = /^[0-9a-f]{40}$/;
+export const FACTORY_LABEL: string = 'factory';
 
 export interface PullHead {
   number: number;
@@ -15,7 +16,7 @@ export interface PullHead {
 }
 
 export function issueBranch(issueDate: string): string {
-  return `sunday/${issueDate}`;
+  return `factory/sunday-${issueDate}`;
 }
 
 export function fetchMain(): void {
@@ -91,12 +92,4 @@ export function remoteBranchSha(branch: string): string | null {
   const sha = line.split(/\s+/)[0] ?? '';
   if (!SHA.test(sha)) throw new Error(`git ls-remote answered "${line}"`);
   return sha;
-}
-
-export function fetchCommit(sha: string): void {
-  git(['fetch', '-q', 'origin', sha]);
-}
-
-export function mergePull(pull: PullHead): void {
-  gh(['pr', 'merge', String(pull.number), '--repo', SITE_REPO, '--merge', '--match-head-commit', pull.headSha, '--delete-branch']);
 }

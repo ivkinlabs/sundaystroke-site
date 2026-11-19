@@ -5,8 +5,8 @@ import { issueProblems, sentenceCount } from './rules.ts';
 import { ISSUE_TWO, candidatesFor } from './testIssue.ts';
 import type { RuleContext } from './rules.ts';
 import type { CandidateFile } from './types.ts';
-import type { SundayIssue, SundaySection } from '../types/sunday.ts';
-import { SUNDAY_ISSUES } from '../data/sunday.ts';
+import type { SundayIssue, SundaySection } from '../src/types/sunday.ts';
+import { SUNDAY_ISSUES } from '../src/data/sunday.ts';
 
 const mediaExists = (sitePath: string): boolean => existsSync(join(process.cwd(), 'public', sitePath));
 const issueOne = SUNDAY_ISSUES[0];

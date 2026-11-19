@@ -4,7 +4,6 @@ const USER_AGENT: string = 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) Appl
 const FETCH_TIMEOUT_MS: number = 20_000;
 const ATTEMPTS: number = 3;
 const RETRY_MS: number = 10_000;
-const POLL_MS: number = 20_000;
 export const DEAD_LINK_STATUSES: ReadonlySet<number> = new Set([404, 410]);
 
 function pause(ms: number): Promise<void> {
@@ -38,36 +37,4 @@ export async function fetchText(url: string): Promise<string> {
   const response = await retried(url);
   if (!response.ok) throw new Error(`${url} answered ${response.status}`);
   return response.text();
-}
-
-export function bust(url: string): string {
-  return `${url}?fresh=${Date.now()}`;
-}
-
-export function issueUrl(issueDate: string): string {
-  return `${SITE_ORIGIN}/sunday/${issueDate}/`;
-}
-
-export async function issueLive(issueDate: string): Promise<boolean> {
-  const status = await pageStatus(bust(issueUrl(issueDate)));
-  if (status === 200) return true;
-  if (status === 404) return false;
-  throw new Error(`${issueUrl(issueDate)} answered ${status}; can't tell whether the issue is live`);
-}
-
-export async function inSitemap(issueDate: string): Promise<boolean> {
-  return (await fetchText(bust(`${SITE_ORIGIN}/sitemap.xml`))).includes(`<loc>${issueUrl(issueDate)}</loc>`);
-}
-
-export async function waitFor(label: string, timeoutMs: number, probe: () => Promise<boolean>): Promise<void> {
-  const deadline = Date.now() + timeoutMs;
-  for (;;) {
-    try {
-      if (await probe()) return;
-    } catch (error) {
-      console.log(`still waiting for ${label}: ${error instanceof Error ? error.message : String(error)}`);
-    }
-    if (Date.now() > deadline) throw new Error(`timed out waiting for ${label}`);
-    await pause(POLL_MS);
-  }
 }

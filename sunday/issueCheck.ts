@@ -1,9 +1,9 @@
 import { existsSync, readFileSync, readdirSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
-import { parseIssue, sortedIssues } from '../lib/sundayIssue.ts';
+import { parseIssue, sortedIssues } from '../src/lib/sundayIssue.ts';
 import { runChecker, replyJson } from './checker.ts';
 import { BUILD_TIMEOUT_MS, git, gh, run } from './exec.ts';
-import { fetchMain, issueBranch, openPull, remoteBranchSha } from './github.ts';
+import { FACTORY_LABEL, fetchMain, issueBranch, openPull, remoteBranchSha } from './github.ts';
 import { pullBody } from './pullBody.ts';
 import { issueProblems } from './rules.ts';
 import { DEAD_LINK_STATUSES, pageStatus } from './site.ts';
@@ -11,7 +11,7 @@ import { SITE_REPO } from './sources.ts';
 import { ISSUES_DIR, readCandidates, readCheckRecord, sha256, statePaths, writeJson } from './state.ts';
 import type { CheckRecord, ItemVerdict } from './types.ts';
 import { applyVerdicts, itemUrls, parseVerdicts } from './verdicts.ts';
-import type { SundayIssue } from '../types/sunday.ts';
+import type { SundayIssue } from '../src/types/sunday.ts';
 
 function localIssues(): readonly SundayIssue[] {
   return sortedIssues(
@@ -78,7 +78,7 @@ export async function commandCheck(issueDate: string): Promise<void> {
   for (const verdict of verdicts) console.log(`${verdict.verdict} ${verdict.sourceUrl}: ${verdict.reason}`);
 }
 
-export function checkedContent(issueDate: string, content: string): CheckRecord {
+function checkedContent(issueDate: string, content: string): CheckRecord {
   const record = readCheckRecord(statePaths(issueDate).check);
   if (record.issueDate !== issueDate || record.issueHash !== sha256(content)) {
     throw new Error(`the issue for ${issueDate} changed after its source check`);
@@ -103,5 +103,5 @@ export function commandOpenPull(issueDate: string): void {
   git(['add', paths.issueFile]);
   git(['commit', '-q', '-m', `The Sunday post, issue ${issue.number}`]);
   git(['push', '-q', '-u', 'origin', `HEAD:refs/heads/${branch}`]);
-  gh(['pr', 'create', '--repo', SITE_REPO, '--base', 'main', '--head', branch, '--title', `The Sunday post, issue ${issue.number} (${issueDate})`, '--body', pullBody(issue, record)]);
+  gh(['pr', 'create', '--repo', SITE_REPO, '--base', 'main', '--head', branch, '--label', FACTORY_LABEL, '--title', `The Sunday post, issue ${issue.number} (${issueDate})`, '--body', pullBody(issue, record)]);
 }

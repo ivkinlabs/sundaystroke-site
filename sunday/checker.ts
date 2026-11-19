@@ -4,7 +4,7 @@ import { join } from 'node:path';
 import { run } from './exec.ts';
 import { CHECKER_MODEL } from './sources.ts';
 import type { CandidateFile } from './types.ts';
-import type { SundayIssue } from '../types/sunday.ts';
+import type { SundayIssue } from '../src/types/sunday.ts';
 
 const CHECKER_PROMPT: string = join('automation', 'sunday-check.md');
 const CHECKER_TIMEOUT_MS: number = 40 * 60_000;

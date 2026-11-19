@@ -1,7 +1,7 @@
 import { addDays, displaySunday, isSunday, madridMidnight } from './calendar.ts';
 import { COPY_RULES, DISC_GOLF_WORDS, ITEM_WINDOW_DAYS, MAX_ITEMS, SECTION_HEADINGS } from './sources.ts';
 import type { Candidate, CandidateFile } from './types.ts';
-import type { SundayIssue, SundaySection } from '../types/sunday.ts';
+import type { SundayIssue, SundaySection } from '../src/types/sunday.ts';
 
 export interface RuleContext {
   earlierIssues: readonly SundayIssue[];

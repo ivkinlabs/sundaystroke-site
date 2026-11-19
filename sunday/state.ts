@@ -2,7 +2,7 @@ import { createHash } from 'node:crypto';
 import { closeSync, existsSync, mkdirSync, openSync, readFileSync, rmSync, statSync, writeFileSync } from 'node:fs';
 import { homedir } from 'node:os';
 import { dirname, join } from 'node:path';
-import { hasExactKeys, hasStrings, isRecord } from '../lib/guards.ts';
+import { hasExactKeys, hasStrings, isRecord } from '../src/lib/guards.ts';
 import type { Candidate, CandidateFile, CheckRecord, FeedFailure, ItemVerdict } from './types.ts';
 
 export const STATE_ROOT: string = join(homedir(), 'Library', 'Application Support', 'sundaystroke-sunday');
@@ -16,9 +16,6 @@ export interface StatePaths {
   candidates: string;
   check: string;
   checked: string;
-  announced: string;
-  missedAlert: string;
-  stuckAlert: string;
   issueFile: string;
 }
 
@@ -29,9 +26,6 @@ export function statePaths(issueDate: string): StatePaths {
     candidates: join(dir, 'candidates.json'),
     check: join(dir, 'check.json'),
     checked: join(dir, 'checked-issue.json'),
-    announced: join(dir, 'announced.json'),
-    missedAlert: join(dir, 'missed-alerted.json'),
-    stuckAlert: join(dir, 'stuck-alerted.json'),
     issueFile: join(ISSUES_DIR, `${issueDate}.json`),
   };
 }
