@@ -3,7 +3,6 @@ import { commandFind } from './collect.ts';
 import { commandPlan } from './facts.ts';
 import { issuesOnMain, fetchMain } from './github.ts';
 import { commandCheck, commandOpenPull, commandValidate } from './issueCheck.ts';
-import { commandAlertMissed, commandPublish } from './publish.ts';
 import { REPORT_MARKER, withLock, writeJson } from './state.ts';
 
 type Command = (args: readonly string[]) => void | Promise<void>;
@@ -30,15 +29,13 @@ const COMMANDS: Readonly<Record<string, Command>> = {
   validate: (args) => commandValidate(dateArgument(args)),
   check: locked(commandCheck),
   'open-pr': locked(commandOpenPull),
-  publish: locked(commandPublish),
-  'alert-missed': locked(commandAlertMissed),
   'mark-reported': () => withLock(async () => markReported()),
 };
 
 const [name, ...rest] = process.argv.slice(2);
 const command = name === undefined ? undefined : COMMANDS[name];
 if (command === undefined) {
-  console.error(`usage: node src/sunday/cli.ts <${Object.keys(COMMANDS).join('|')}> [--date yyyy-mm-dd]`);
+  console.error(`usage: node sunday/cli.ts <${Object.keys(COMMANDS).join('|')}> [--date yyyy-mm-dd]`);
   process.exit(2);
 }
 await command(rest);

@@ -2,13 +2,11 @@ import { existsSync } from 'node:fs';
 import { madridDay } from './calendar.ts';
 import { fetchMain, issueOnMain, issuesOnMain, openPull } from './github.ts';
 import { issueDateFor, plan } from './plan.ts';
-import { issueLive } from './site.ts';
 import { FACTORY_RUNTIME } from './sources.ts';
 import { REPORT_MARKER, statePaths } from './state.ts';
 import type { IssueState } from './types.ts';
 
-async function issueState(issueDate: string): Promise<IssueState> {
-  if (await issueLive(issueDate)) return 'live';
+function issueState(issueDate: string): IssueState {
   if (issueOnMain(issueDate) !== null) return 'merged';
   return openPull(issueDate) === null ? 'none' : 'open-pr';
 }
@@ -20,10 +18,8 @@ export async function commandPlan(): Promise<void> {
   fetchMain();
   const result = plan({
     today,
-    issueState: await issueState(issueDate),
+    issueState: issueState(issueDate),
     candidatesCollected: existsSync(paths.candidates),
-    announced: existsSync(paths.announced),
-    missedAlerted: existsSync(paths.missedAlert),
     publishedIssues: issuesOnMain().length,
     reportSent: existsSync(REPORT_MARKER),
   });

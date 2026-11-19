@@ -1,5 +1,5 @@
 import type { Candidate, CandidateFile } from './types.ts';
-import type { SundayIssue } from '../types/sunday.ts';
+import type { SundayIssue } from '../src/types/sunday.ts';
 
 export function candidatesFor(issue: SundayIssue): CandidateFile {
   const candidates: Candidate[] = issue.sections.flatMap((section) =>

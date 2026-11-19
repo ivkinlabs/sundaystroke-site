@@ -1,4 +1,4 @@
-import type { SundaySectionKey } from '../types/sunday.ts';
+import type { SundaySectionKey } from '../src/types/sunday.ts';
 
 export interface FeedSource {
   name: string;
@@ -46,22 +46,31 @@ export interface CheckRecord {
   verdicts: readonly ItemVerdict[];
 }
 
+export interface FactCheckFact {
+  part: 'text';
+  claim: string;
+  source: string;
+}
+
+export interface FactCheckPage {
+  page: string;
+  facts: readonly FactCheckFact[];
+}
+
 export interface MadridDay {
   date: string;
   weekday: number;
   hour: number;
 }
 
-export type Step = 'find' | 'write' | 'check' | 'open-pr' | 'publish' | 'alert-missed' | 'report';
+export type Step = 'find' | 'write' | 'check' | 'open-pr' | 'report';
 
-export type IssueState = 'none' | 'open-pr' | 'merged' | 'live';
+export type IssueState = 'none' | 'open-pr' | 'merged';
 
 export interface PlanFacts {
   today: MadridDay;
   issueState: IssueState;
   candidatesCollected: boolean;
-  announced: boolean;
-  missedAlerted: boolean;
   publishedIssues: number;
   reportSent: boolean;
 }

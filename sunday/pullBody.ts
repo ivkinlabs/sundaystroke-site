@@ -1,8 +1,18 @@
-import type { CheckRecord, ItemVerdict } from './types.ts';
-import type { SundayIssue } from '../types/sunday.ts';
+import { statePaths } from './state.ts';
+import type { CheckRecord, FactCheckFact, FactCheckPage, ItemVerdict } from './types.ts';
+import type { SundayIssue } from '../src/types/sunday.ts';
+
+const FENCE: string = '```';
 
 function verdictLine(verdict: ItemVerdict): string {
   return `- ${verdict.sourceUrl}: ${verdict.reason}`;
+}
+
+function factCheck(issue: SundayIssue): readonly FactCheckPage[] {
+  const facts = issue.sections.flatMap((section) =>
+    section.items.map((item): FactCheckFact => ({ part: 'text', claim: `${item.headline}: ${item.body}`, source: item.sourceUrl })),
+  );
+  return [{ page: statePaths(issue.slug).issueFile, facts }];
 }
 
 export function pullBody(issue: SundayIssue, record: CheckRecord): string {
@@ -17,6 +27,11 @@ export function pullBody(issue: SundayIssue, record: CheckRecord): string {
     `## Rejected by the check (${rejected.length})`,
     ...(rejected.length === 0 ? ['None.'] : rejected.map(verdictLine)),
     '',
-    'Merged on Sunday morning, Madrid time, by the same weekly run.',
+    '## Fact check',
+    `${FENCE}factory-fact-check`,
+    JSON.stringify(factCheck(issue), null, 2),
+    FENCE,
+    '',
+    'Goes live once the owner taps Publish on this exact issue.',
   ].join('\n');
 }
