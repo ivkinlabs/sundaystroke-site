@@ -82,9 +82,6 @@ export function issueOnMain(issueDate: string): string | null {
   return pathExistsAt(MAIN, path) ? blobAt(MAIN, path) : null;
 }
 
-export function mediaOnMain(sitePath: string): boolean {
-  return pathExistsAt(MAIN, `public${sitePath}`);
-}
 
 export function remoteBranchSha(branch: string): string | null {
   const line = git(['ls-remote', 'origin', `refs/heads/${branch}`]);
