@@ -71,8 +71,13 @@ export interface PlanFacts {
   today: MadridDay;
   issueState: IssueState;
   candidatesCollected: boolean;
+  checkerConfirmedNothing: boolean;
   publishedIssues: number;
   reportSent: boolean;
+}
+
+export interface IssueProgress {
+  checked: boolean;
 }
 
 export interface Plan {

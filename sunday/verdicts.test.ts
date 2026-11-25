@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { ISSUE_TWO } from './testIssue.ts';
 import type { ItemVerdict } from './types.ts';
-import { applyVerdicts, parseVerdicts } from './verdicts.ts';
+import { applyVerdicts, confirmsNothing, parseVerdicts } from './verdicts.ts';
 
 const GOLF = 'https://www.bbc.co.uk/sport/golf/1';
 const DISC = 'https://www.pdga.com/news/1';
@@ -43,5 +43,12 @@ describe('applyVerdicts', () => {
 
   it('refuses to publish when nothing was confirmed', () => {
     expect(() => applyVerdicts(ISSUE_TWO, [rejected(GOLF), rejected(DISC)])).toThrow(/no item/);
+  });
+});
+
+describe('confirmsNothing', () => {
+  it('is true only when every item was rejected', () => {
+    expect(confirmsNothing([rejected(GOLF), rejected(DISC)])).toBe(true);
+    expect(confirmsNothing([confirmed(GOLF), rejected(DISC)])).toBe(false);
   });
 });

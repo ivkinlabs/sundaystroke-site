@@ -15,7 +15,7 @@ export function issueDateFor(today: MadridDay): string {
 }
 
 function issueSteps(facts: PlanFacts): Step[] {
-  if (facts.issueState !== 'none' || !inIssueWeekend(facts.today)) return [];
+  if (facts.issueState !== 'none' || facts.checkerConfirmedNothing || !inIssueWeekend(facts.today)) return [];
   const steps: Step[] = facts.candidatesCollected ? [] : ['find'];
   if (facts.today.weekday === FRIDAY) return steps;
   return [...steps, 'write', 'check', 'open-pr'];

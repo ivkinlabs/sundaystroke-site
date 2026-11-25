@@ -16,6 +16,7 @@ export interface StatePaths {
   candidates: string;
   check: string;
   checked: string;
+  confirmedNothing: string;
   issueFile: string;
 }
 
@@ -26,6 +27,7 @@ export function statePaths(issueDate: string): StatePaths {
     candidates: join(dir, 'candidates.json'),
     check: join(dir, 'check.json'),
     checked: join(dir, 'checked-issue.json'),
+    confirmedNothing: join(dir, 'confirmed-nothing.json'),
     issueFile: join(ISSUES_DIR, `${issueDate}.json`),
   };
 }

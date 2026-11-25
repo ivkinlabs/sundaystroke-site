@@ -41,6 +41,10 @@ export function parseVerdicts(json: string, issue: SundayIssue): readonly ItemVe
   return verdicts;
 }
 
+export function confirmsNothing(verdicts: readonly ItemVerdict[]): boolean {
+  return verdicts.every((verdict) => verdict.verdict === 'rejected');
+}
+
 export function applyVerdicts(issue: SundayIssue, verdicts: readonly ItemVerdict[]): CheckedIssue {
   const rejected = verdicts.filter((verdict) => verdict.verdict === 'rejected');
   const rejectedUrls = new Set(rejected.map((verdict) => verdict.sourceUrl));
