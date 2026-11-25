@@ -20,10 +20,6 @@ export const SITE_REPO: string = 'ivkinlabs/sundaystroke-site';
 export const FACTORY_RUNTIME: string = '/Users/ivkin/my/factory-runtime';
 export const FIRST_AUTOMATED_ISSUE: string = '2026-11-15';
 export const CHECKER_MODEL: string = 'claude-opus-5-5';
-export const SECTION_HEADINGS: Readonly<Record<'golf' | 'tracer', string>> = {
-  golf: 'Golf',
-  tracer: 'For Tracer: disc golf',
-};
 export const DISC_GOLF_WORDS: RegExp = /disc\s*golf|\bPDGA\b|\bDGPT\b/i;
 
 export interface CopyRule {

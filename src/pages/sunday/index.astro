@@ -2,19 +2,18 @@
 import ArticlePage from '../../components/ArticlePage.astro';
 import { SUNDAY_ISSUES } from '../../data/sunday';
 import { sitePath } from '../../utils/paths';
-import { SUNDAY_CALLS } from '../../data/storeCalls';
 
 ---
 <ArticlePage
   pageTitle="The Sunday post · SundayStroke"
-  description="Golf and disc golf stories, practical playing ideas and SundayStroke app updates. Browse every issue of The Sunday post."
+  description="The week in golf and disc golf for club golfers: results, rules and tour news, with a link to every original story. Browse every issue of The Sunday post."
   eyebrow="The Sunday post"
   heading="The Sunday post"
   dates={null}
   banner={null}
-  calls={SUNDAY_CALLS}
+  calls={[]}
 >
-  <p>The Sunday post brings together golf and disc golf stories, a practical idea for your next round and an update from SundayStroke. Browse the issues below.</p>
+  <p>The Sunday post is the week in golf and disc golf for club golfers: results, rules and tour news, with a link to every original story. Browse the issues below.</p>
   <h2>Issues</h2>
   <ul>
     {SUNDAY_ISSUES.map((issue) => (

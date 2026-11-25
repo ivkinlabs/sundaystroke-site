@@ -1,27 +1,32 @@
 import { addDays, displaySunday, isSunday, madridMidnight } from './calendar.ts';
-import { COPY_RULES, DISC_GOLF_WORDS, ITEM_WINDOW_DAYS, MAX_ITEMS, SECTION_HEADINGS } from './sources.ts';
+import { promotionReasons } from './promotion.ts';
+import { COPY_RULES, DISC_GOLF_WORDS, ITEM_WINDOW_DAYS, MAX_ITEMS } from './sources.ts';
 import type { Candidate, CandidateFile } from './types.ts';
+import { hasExactKeys, isRecord } from '../src/lib/guards.ts';
+import { SUNDAY_SECTION_HEADINGS } from '../src/lib/sundayIssue.ts';
 import type { SundayIssue, SundaySection } from '../src/types/sunday.ts';
 
 export interface RuleContext {
   earlierIssues: readonly SundayIssue[];
   candidates: CandidateFile;
-  mediaExists: (sitePath: string) => boolean;
 }
 
 const ABBREVIATIONS: RegExp = /\b(?:Mr|Mrs|Ms|Dr|St|Jr|Sr|vs|No|U\.S|U\.K|a\.m|p\.m|Jan|Feb|Mar|Apr|Jun|Jul|Aug|Sep|Sept|Oct|Nov|Dec|[A-Z])\./g;
-const SITE_MEDIA: RegExp = /^\/media\/[a-z0-9_-]+(?:\/[a-z0-9_-]+)*\.(?:mp4|jpg)$/;
 const SENTENCE_END: RegExp = /[.!?…]+["”’)]*(?=\s|$)/g;
 const SUMMARY_CHARS: number = 160;
 const TITLE_SUFFIX: string = ' | SundayStroke';
-const SECTION_ORDER: readonly string[] = ['golf', 'tracer'];
+const SECTION_ORDER: readonly string[] = Object.keys(SUNDAY_SECTION_HEADINGS);
+const ISSUE_FIELDS: readonly string[] = ['slug', 'number', 'date', 'title', 'pageTitle', 'summary', 'sections'];
+const SECTION_FIELDS: readonly string[] = ['key', 'items'];
+const ITEM_FIELDS: readonly string[] = ['headline', 'body', 'sourceLabel', 'sourceUrl'];
+const DISC_GOLF_SECTION: string = SUNDAY_SECTION_HEADINGS.tracer;
 
 export function sentenceCount(text: string): number {
   return (text.replace(ABBREVIATIONS, 'ABBR').trim().match(SENTENCE_END) ?? []).length;
 }
 
 function sectionText(section: SundaySection): string {
-  return [section.heading, ...section.items.flatMap((item) => [item.headline, item.body])].join(' ');
+  return section.items.flatMap((item) => [item.headline, item.body]).join(' ');
 }
 
 function headerProblems(issue: SundayIssue, context: RuleContext): string[] {
@@ -35,16 +40,8 @@ function headerProblems(issue: SundayIssue, context: RuleContext): string[] {
   if (issue.title !== `The Sunday post, issue ${expectedNumber}`) problems.push(`title must be "The Sunday post, issue ${expectedNumber}"`);
   if (!issue.pageTitle.endsWith(TITLE_SUFFIX)) problems.push(`pageTitle must end with "${TITLE_SUFFIX}"`);
   if (issue.summary.trim() === '' || issue.summary.length > SUMMARY_CHARS) problems.push(`summary must be 1–${SUMMARY_CHARS} characters`);
-  if (issue.leadText.trim() === '') problems.push('the lead has no text');
-  if (issue.leadClips.length === 0) problems.push('the lead has no clip of ours');
-  for (const clip of issue.leadClips) {
-    if (!clip.src.endsWith('.mp4') || !clip.poster.endsWith('.jpg')) problems.push(`lead clip ${clip.src} needs an .mp4 and a .jpg poster`);
-    for (const path of [clip.src, clip.poster]) {
-      if (!SITE_MEDIA.test(path) || !context.mediaExists(path)) problems.push(`lead media ${path} is not one of the site's own files`);
-    }
-  }
-  const outsideTracer = [issue.title, issue.pageTitle, issue.summary, issue.leadText, ...issue.leadClips.map((clip) => clip.label)];
-  if (outsideTracer.some((text) => DISC_GOLF_WORDS.test(text))) problems.push('disc golf is named outside the Tracer section');
+  const outsideDiscGolf = [issue.title, issue.pageTitle, issue.summary];
+  if (outsideDiscGolf.some((text) => DISC_GOLF_WORDS.test(text))) problems.push(`disc golf is named outside the ${DISC_GOLF_SECTION} section`);
   return problems;
 }
 
@@ -59,7 +56,6 @@ function itemWindow(issueDate: string): ItemWindow {
 
 function itemProblems(section: SundaySection, byUrl: ReadonlyMap<string, Candidate>, seen: Set<string>, window: ItemWindow): string[] {
   const problems: string[] = [];
-  if (section.heading !== SECTION_HEADINGS[section.key]) problems.push(`the ${section.key} heading must be "${SECTION_HEADINGS[section.key]}"`);
   if (section.items.length === 0) problems.push(`the ${section.key} section is empty; drop it`);
   if (section.key === 'golf' && DISC_GOLF_WORDS.test(sectionText(section))) problems.push('disc golf is named in the Golf section');
   for (const item of section.items) {
@@ -83,15 +79,37 @@ function itemProblems(section: SundaySection, byUrl: ReadonlyMap<string, Candida
 }
 
 function copyProblems(issue: SundayIssue): string[] {
-  const texts = [issue.title, issue.pageTitle, issue.summary, issue.leadText, ...issue.leadClips.map((clip) => clip.label), ...issue.sections.map(sectionText)];
-  return COPY_RULES.filter((rule) => texts.some((text) => rule.pattern.test(text))).map((rule) => `the copy ${rule.reason}`);
+  const texts = [issue.title, issue.pageTitle, issue.summary, ...issue.sections.map(sectionText)];
+  const broken = COPY_RULES.filter((rule) => texts.some((text) => rule.pattern.test(text))).map((rule) => rule.reason);
+  const promoting = [...new Set(texts.flatMap(promotionReasons))];
+  return [...broken, ...promoting].map((reason) => `the copy ${reason}`);
+}
+
+function fieldProblem(value: unknown, fields: readonly string[], label: string): string[] {
+  if (isRecord(value) && hasExactKeys(value, fields)) return [];
+  return [`${label} must have exactly the fields ${fields.join(', ')}`];
+}
+
+export function shapeProblems(value: unknown): readonly string[] {
+  const problems = fieldProblem(value, ISSUE_FIELDS, 'the issue');
+  const sections = isRecord(value) && Array.isArray(value.sections) ? value.sections : [];
+  for (const section of sections) {
+    problems.push(...fieldProblem(section, SECTION_FIELDS, 'each section'));
+    const items = isRecord(section) && Array.isArray(section.items) ? section.items : [];
+    for (const item of items) problems.push(...fieldProblem(item, ITEM_FIELDS, 'each item'));
+  }
+  return [...new Set(problems)];
+}
+
+export function issueFileProblems(json: unknown, issue: SundayIssue, context: RuleContext): readonly string[] {
+  return [...shapeProblems(json), ...issueProblems(issue, context)];
 }
 
 export function issueProblems(issue: SundayIssue, context: RuleContext): readonly string[] {
   const problems = [...headerProblems(issue, context), ...copyProblems(issue)];
   const keys = issue.sections.map((section) => section.key);
   const ordered = SECTION_ORDER.filter((key) => keys.some((present) => present === key));
-  if (new Set(keys).size !== keys.length || keys.join() !== ordered.join()) problems.push('sections must be Golf, then Tracer, each at most once');
+  if (new Set(keys).size !== keys.length || keys.join() !== ordered.join()) problems.push(`sections must be Golf, then ${DISC_GOLF_SECTION}, each at most once`);
   const total = issue.sections.reduce((sum, section) => sum + section.items.length, 0);
   if (total < 1 || total > MAX_ITEMS) problems.push(`${total} items; 1 to ${MAX_ITEMS} allowed`);
   const byUrl = new Map(context.candidates.candidates.map((candidate) => [candidate.link, candidate]));

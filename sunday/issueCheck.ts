@@ -1,11 +1,11 @@
-import { existsSync, readFileSync, readdirSync, rmSync, writeFileSync } from 'node:fs';
+import { readFileSync, readdirSync, rmSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { parseIssue, sortedIssues } from '../src/lib/sundayIssue.ts';
 import { runChecker, replyJson } from './checker.ts';
 import { BUILD_TIMEOUT_MS, git, gh, run } from './exec.ts';
 import { FACTORY_LABEL, fetchMain, issueBranch, openPull, remoteBranchSha } from './github.ts';
 import { pullBody } from './pullBody.ts';
-import { issueProblems } from './rules.ts';
+import { issueFileProblems } from './rules.ts';
 import { DEAD_LINK_STATUSES, pageStatus } from './site.ts';
 import { SITE_REPO } from './sources.ts';
 import { ISSUES_DIR, readCandidates, readCheckRecord, sha256, statePaths, writeJson } from './state.ts';
@@ -33,10 +33,10 @@ export function validated(issueDate: string): SundayIssue {
   const issues = localIssues();
   const issue = issues.find((candidate) => candidate.slug === issueDate);
   if (issue === undefined) throw new Error(`no issue file ${paths.issueFile}`);
-  const problems = [...issueProblems(issue, {
+  const json: unknown = JSON.parse(readFileSync(paths.issueFile, 'utf8'));
+  const problems = [...issueFileProblems(json, issue, {
     earlierIssues: issues.filter((earlier) => earlier.slug !== issueDate),
     candidates: readCandidates(paths.candidates),
-    mediaExists: (sitePath) => existsSync(join('public', sitePath)),
   })];
   const others = changedFiles().filter((file) => file !== paths.issueFile);
   if (others.length > 0) problems.push(`only ${paths.issueFile} may change; also changed: ${others.join(', ')}`);

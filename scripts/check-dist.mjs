@@ -1,5 +1,6 @@
 import { readFileSync, readdirSync, existsSync, statSync } from 'node:fs';
 import { join, relative } from 'node:path';
+import { STORE_LINK, promotionReasons } from '../sunday/promotion.ts';
 
 const DIST = 'dist';
 const SITE_HOST = 'sundaystroke.com';
@@ -12,6 +13,8 @@ const COPY_RULES = [
 ];
 const CURRENCY = /[$€£¥]\s?\d|\d\s?(?:USD|EUR|GBP)\b/;
 const CHECKED_ON = /Checked on \d{1,2} [A-Z][a-z]+ \d{4}/;
+const NEWS_PREFIX = 'sunday/';
+const ARTICLE = /<article\b[^>]*>([\s\S]*?)<\/article>/;
 const TRACER_DISTANCE = /\b(?:measures?|calculates?|tracks?)\b[^.]{0,40}\bdistance/i;
 
 function htmlFiles(dir) {
@@ -63,6 +66,17 @@ function headProblems(page, html, frozen) {
   return found;
 }
 
+function newsProblems(page, html) {
+  const article = html.match(ARTICLE);
+  if (article === null) return [`${page}: no article`];
+  const found = promotionReasons(visibleText(article[1]).replace(/&nbsp;|&#160;/g, ' ')).map((reason) => `${page}: the article ${reason}`);
+  for (const [, href] of article[1].matchAll(/href="([^"]+)"/g)) {
+    if (STORE_LINK.test(href)) found.push(`${page}: the article links a store, ${href}`);
+  }
+  if (/<video\b/i.test(article[1])) found.push(`${page}: the article plays a video`);
+  return found;
+}
+
 function resolveInternal(href) {
   const path = href.split(/[?#]/)[0];
   if (path === '') return true;
@@ -88,6 +102,7 @@ for (const file of files) {
   if (PRODUCT_PREFIXES.some((prefix) => page === prefix || page.startsWith(prefix)) && CURRENCY.test(text)) {
     problems.push(`${page}: shows a currency amount`);
   }
+  if (page.startsWith(NEWS_PREFIX)) problems.push(...newsProblems(page, html));
   if (page.startsWith('tracer/') && TRACER_DISTANCE.test(text)) problems.push(`${page}: says Tracer measures distance`);
   if (page.startsWith('compare/') && !CHECKED_ON.test(text)) problems.push(`${page}: no "Checked on" date`);
   if (!html.includes('static.cloudflareinsights.com/beacon.min.js') || !html.includes('data-cf-beacon')) problems.push(`${page}: no analytics beacon`);

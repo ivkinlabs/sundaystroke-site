@@ -22,19 +22,15 @@ export const ISSUE_TWO: SundayIssue = {
   title: 'The Sunday post, issue 2',
   pageTitle: 'A Final-Round Charge | SundayStroke',
   summary: 'A final-round charge and a putting habit.',
-  leadText: 'Here is a swing traced in the Tracer app.',
-  leadClips: [{ src: '/media/learn/golf-result.mp4', poster: '/media/learn/golf-result.jpg', label: 'Traced' }],
   sections: [
     {
       key: 'golf',
-      heading: 'Golf',
       items: [
         { headline: 'A final-round charge', body: 'Smith shot 63 to win by two. It was his first title.', sourceLabel: 'BBC Sport', sourceUrl: 'https://www.bbc.co.uk/sport/golf/1' },
       ],
     },
     {
       key: 'tracer',
-      heading: 'For Tracer: disc golf',
       items: [
         { headline: 'Worlds move', body: 'The PDGA set new dates for Pro Worlds.', sourceLabel: 'PDGA', sourceUrl: 'https://www.pdga.com/news/1' },
       ],

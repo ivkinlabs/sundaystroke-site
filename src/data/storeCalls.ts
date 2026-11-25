@@ -21,11 +21,6 @@ export const HANDICAP_CALLS: readonly StoreCall[] = [
   },
 ];
 
-export const SUNDAY_CALLS: readonly StoreCall[] = [
-  { target: { app: 'tracer', campaign: 'web-sunday' }, heading: 'Tracer', body: 'Draw the flight onto your own videos.' },
-  { target: { app: 'golfGps', campaign: 'web-sunday' }, heading: 'Golf GPS', body: 'Free yardages and a scorecard for your Sunday round.' },
-];
-
 export const TRACER_COMPARE_CALLS: readonly StoreCall[] = [
   { target: { app: 'tracer', campaign: 'web-compare' }, heading: 'Try Tracer', body: 'Free to try on iPhone, for golf and disc golf.' },
 ];

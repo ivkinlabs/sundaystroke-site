@@ -1,10 +1,10 @@
 import { hasStrings, isRecord } from './guards.ts';
-import type { SundayIssue, SundayItem, SundaySection } from '../types/sunday.ts';
-import type { Clip } from '../types/tutorial.ts';
+import type { SundayIssue, SundayItem, SundaySection, SundaySectionKey } from '../types/sunday.ts';
 
-function isClip(value: unknown): value is Clip {
-  return isRecord(value) && hasStrings(value, ['src', 'poster', 'label']);
-}
+export const SUNDAY_SECTION_HEADINGS: Readonly<Record<SundaySectionKey, string>> = {
+  golf: 'Golf',
+  tracer: 'Disc golf',
+};
 
 function isItem(value: unknown): value is SundayItem {
   return isRecord(value) && hasStrings(value, ['headline', 'body', 'sourceLabel', 'sourceUrl']);
@@ -14,7 +14,6 @@ function isSection(value: unknown): value is SundaySection {
   return (
     isRecord(value) &&
     (value.key === 'golf' || value.key === 'tracer') &&
-    typeof value.heading === 'string' &&
     Array.isArray(value.items) &&
     value.items.every(isItem)
   );
@@ -23,10 +22,8 @@ function isSection(value: unknown): value is SundaySection {
 export function isSundayIssue(value: unknown): value is SundayIssue {
   return (
     isRecord(value) &&
-    hasStrings(value, ['slug', 'date', 'title', 'pageTitle', 'summary', 'leadText']) &&
+    hasStrings(value, ['slug', 'date', 'title', 'pageTitle', 'summary']) &&
     typeof value.number === 'number' &&
-    Array.isArray(value.leadClips) &&
-    value.leadClips.every(isClip) &&
     Array.isArray(value.sections) &&
     value.sections.every(isSection)
   );
