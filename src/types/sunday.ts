@@ -1,5 +1,3 @@
-import type { Clip } from './tutorial.ts';
-
 export type SundaySectionKey = 'golf' | 'tracer';
 
 export interface SundayItem {
@@ -11,7 +9,6 @@ export interface SundayItem {
 
 export interface SundaySection {
   key: SundaySectionKey;
-  heading: string;
   items: readonly SundayItem[];
 }
 
@@ -22,7 +19,5 @@ export interface SundayIssue {
   title: string;
   pageTitle: string;
   summary: string;
-  leadText: string;
-  leadClips: readonly Clip[];
   sections: readonly SundaySection[];
 }
