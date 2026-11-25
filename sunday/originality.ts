@@ -9,7 +9,7 @@ function words(text: string): readonly string[] {
 }
 
 export function wordCount(text: string): number {
-  return text.trim().split(/\s+/).filter((word) => word !== '').length;
+  return words(text).length;
 }
 
 function runs(list: readonly string[]): readonly string[] {

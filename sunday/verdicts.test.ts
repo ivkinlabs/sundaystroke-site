@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { ISSUE_TWO } from './testIssue.ts';
 import type { ItemVerdict } from './types.ts';
-import { applyVerdicts, confirmsNothing, parseVerdicts } from './verdicts.ts';
+import { applyVerdicts, confirmsNothing, parseVerdicts, withoutItems } from './verdicts.ts';
 
 const GOLF = 'https://www.bbc.co.uk/sport/golf/1';
 const DISC = 'https://www.pdga.com/news/1';
@@ -51,6 +51,13 @@ describe('applyVerdicts', () => {
 
   it('refuses to publish when nothing was confirmed', () => {
     expect(() => applyVerdicts(ISSUE_TWO, [rejected(GOLF), rejected(DISC)])).toThrow(/no item/);
+  });
+});
+
+describe('withoutItems', () => {
+  it('leaves only the live stories for the checker, and nothing when every link is dead', () => {
+    expect(withoutItems(ISSUE_TWO, [rejected(DISC)]).sections.map((section) => section.key)).toEqual(['golf']);
+    expect(withoutItems(ISSUE_TWO, [rejected(GOLF), rejected(DISC)]).sections).toEqual([]);
   });
 });
 

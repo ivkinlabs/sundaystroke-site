@@ -55,12 +55,17 @@ export function confirmsNothing(verdicts: readonly ItemVerdict[]): boolean {
   return verdicts.every((verdict) => verdict.verdict === 'rejected');
 }
 
+export function withoutItems(issue: SundayIssue, verdicts: readonly ItemVerdict[]): SundayIssue {
+  const dropped = new Set(verdicts.map((verdict) => verdict.sourceUrl));
+  const sections = issue.sections
+    .map((section) => ({ ...section, items: section.items.filter((item) => !dropped.has(item.sourceUrl)) }))
+    .filter((section) => section.items.length > 0);
+  return { ...issue, sections };
+}
+
 export function applyVerdicts(issue: SundayIssue, verdicts: readonly ItemVerdict[]): CheckedIssue {
   const rejected = verdicts.filter((verdict) => verdict.verdict === 'rejected');
-  const rejectedUrls = new Set(rejected.map((verdict) => verdict.sourceUrl));
-  const sections = issue.sections
-    .map((section) => ({ ...section, items: section.items.filter((item) => !rejectedUrls.has(item.sourceUrl)) }))
-    .filter((section) => section.items.length > 0);
-  if (sections.length === 0) throw new Error('the check confirmed no item, so there is no issue this week');
-  return { issue: { ...issue, sections }, rejected };
+  const checked = withoutItems(issue, rejected);
+  if (checked.sections.length === 0) throw new Error('the check confirmed no item, so there is no issue this week');
+  return { issue: checked, rejected };
 }

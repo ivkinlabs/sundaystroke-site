@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { metaTags, previewFrom } from './previews.ts';
+import { metaTags, previewFrom } from './openGraph.ts';
 
 const PAGE: string = 'https://www.espn.com/golf/story/_/id/1/duncan-wins';
 
@@ -39,5 +39,17 @@ describe('source previews', () => {
     expect((long?.description.length ?? 0) <= 201).toBe(true);
     const appDescription = previewFrom(html('<meta property="og:title" content="A title"><meta property="og:description" content="Download now.">'), PAGE, 'ESPN');
     expect(appDescription?.description).toBe('');
+  });
+  it('reads only the page head, skips out-of-range character codes and keeps quoted > inside attributes', () => {
+    const page =
+      '<html><head><meta property="og:title" content="Par &#99999999; 3 > 4"></head>' +
+      '<body><meta property="og:description" content="Body text"></body></html>';
+    expect(metaTags(page).get('og:title')).toBe('Par 3 > 4');
+    expect(metaTags(page).has('og:description')).toBe(false);
+  });
+
+  it('keeps no image whose address carries a user name', () => {
+    const preview = previewFrom(html('<meta property="og:title" content="A title"><meta property="og:image" content="https://user:pw@cdn.example.com/a.jpg">'), PAGE, 'ESPN');
+    expect(preview?.image).toBeNull();
   });
 });
