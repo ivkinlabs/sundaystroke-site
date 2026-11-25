@@ -4,6 +4,11 @@ export type SundaySectionKey = 'golf' | 'discGolf';
 
 export type LegacySectionKey = 'golf' | 'tracer';
 
+export interface SectionFacts {
+  heading: string;
+  anchor: string;
+}
+
 export interface SourcePreview {
   title: string;
   siteName: string;
@@ -63,12 +68,17 @@ export interface LegacyIssue extends SundayIssueHeader {
 
 export type SundayIssue = CurrentIssue | LegacyIssue;
 
+export interface PublishedDate {
+  iso: string;
+  label: string;
+}
+
 export interface StoryView {
   anchor: string;
   headline: string;
   body: string;
   whyItMatters: string | null;
-  published: string | null;
+  published: PublishedDate | null;
   sourceLabel: string;
   sourceUrl: string;
   preview: SourcePreview | null;

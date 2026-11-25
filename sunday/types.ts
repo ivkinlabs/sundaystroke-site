@@ -100,3 +100,8 @@ export interface CheckReply {
   note: NoteVerdict;
   verdicts: readonly ItemVerdict[];
 }
+
+export interface FetchedPage {
+  html: string;
+  url: string;
+}

@@ -47,14 +47,14 @@ The Sunday post is a short weekly read for club golfers, like a golf newsletter 
 ```
 
    Leave out a section with no story. `published` is the day the story came out, in Madrid time, from its `published` in `paths.candidates`. `sourceLabel` is the feed's name as `paths.candidates` gives it; `sourceUrl` is the story's `link`, unchanged. Leave `preview` as `null`.
-6. `node sunday/cli.ts preview --date D` reads each story's own share card (title, site name, short description and image) from its page into `preview`, or a plain text card from the feed when the page has none. Never write or edit `preview` yourself, and never put a source's photo anywhere else.
-7. Never change any other file. Earlier issues, their dates and their wording stay exactly as published.
+6. `node sunday/cli.ts preview --date D` reads each story's own share card (title, site name, short description and image) from its page into `preview`, or a plain text card from the feed when the page has none or shows something other than the story. The check step reads them again itself, so whatever is in `preview` then comes from the pages. Never write or edit `preview` yourself, and never put a source's photo anywhere else.
+7. Never change any other file. Earlier issues, their dates and their wording are never rewritten; the site shows them in the current layout without their old promotion blocks.
 8. Copy rules for everything you write: plain words for golfers; no prices; never name an app, a store, a download, Tracer or Golf GPS; never the word "shot" followed by "tracer"; nothing about baseball; never say anything measures, calculates or tracks distance; never name tools, vendors, the tech stack or how this run works; disc golf only in the Disc golf section and the editor's note.
 9. `node sunday/cli.ts validate --date D`, then `npm run build`. Fix what they report (never by editing `preview`) and run both again until they pass.
 
 ## check
 
-`node sunday/cli.ts check --date D` hands the issue to a second, independent checker that reads every source page and confirms or rejects each item and the editor's note, drops the rejected items and any dead link, and records what it checked. If it rejects the editor's note, the step fails: stop, and a later run writes the issue again. Don't touch the issue file after it; if it says nothing was confirmed, stop: there is no issue this week, and it has recorded that, so the factory's check after your run passes. Otherwise `npm run build`.
+`node sunday/cli.ts check --date D` hands the issue to a second, independent checker that reads every source page and confirms or rejects each item, and confirms or rejects the editor's note, `pageTitle` and `summary` together against the items it confirms, drops the rejected items and any dead link, and records what it checked. If it rejects the note, the step fails and writes nothing: rewrite `editorsNote`, `pageTitle` and `summary` from the stories it confirmed, leaving out any story it rejected, run validate and check once more, and stop if it rejects them again. Don't touch the issue file after it; if it says nothing was confirmed, stop: there is no issue this week, and it has recorded that, so the factory's check after your run passes. Otherwise `npm run build`.
 
 ## open-pr
 

@@ -1,6 +1,5 @@
 ---
 import SourcePreviewCard from './SourcePreviewCard.astro';
-import { isoDate } from '../utils/dates';
 import type { StoryView } from '../types/sunday';
 
 interface Props {
@@ -12,7 +11,7 @@ const { story } = Astro.props;
 <article id={story.anchor} aria-labelledby={`${story.anchor}-headline`} class="ss-card not-prose my-6 flex scroll-mt-28 flex-col gap-4 p-5 sm:p-6">
   <p class="ss-tag text-mist">
     {story.sourceLabel}
-    {story.published !== null && <> · <time datetime={isoDate(story.published)}>{story.published}</time></>}
+    {story.published !== null && <> · <time datetime={story.published.iso}>{story.published.label}</time></>}
   </p>
   <h3 id={`${story.anchor}-headline`} class="text-title-2 text-ice">{story.headline}</h3>
   <p class="text-body-lg text-mist">{story.body}</p>

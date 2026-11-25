@@ -1,9 +1,10 @@
 import { readFileSync, readdirSync, rmSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
-import { parseIssue, sortedIssues } from '../src/lib/sundayIssue.ts';
+import { parseCurrentIssue, parseIssue, sortedIssues } from '../src/lib/sundayIssue.ts';
 import { runChecker, replyJson } from './checker.ts';
 import { BUILD_TIMEOUT_MS, git, gh, run } from './exec.ts';
 import { FACTORY_LABEL, fetchMain, issueBranch, openPull, remoteBranchSha } from './github.ts';
+import { withPreviews } from './preview.ts';
 import { pullBody } from './pullBody.ts';
 import { issueProblems } from './rules.ts';
 import { DEAD_LINK_STATUSES, pageStatus } from './site.ts';
@@ -63,9 +64,18 @@ function combined(checker: readonly ItemVerdict[], dead: readonly ItemVerdict[])
   return [...dead, ...checker.filter((verdict) => !deadUrls.has(verdict.sourceUrl))];
 }
 
+async function previewedIssue(issueDate: string): Promise<CurrentIssue> {
+  const paths = statePaths(issueDate);
+  const written = parseCurrentIssue(readFileSync(paths.issueFile, 'utf8'), paths.issueFile);
+  const previewed = await withPreviews(written, readCandidates(paths.candidates).candidates);
+  writeFileSync(paths.issueFile, `${JSON.stringify(previewed, null, 2)}\n`);
+  return validated(issueDate);
+}
+
 export async function commandCheck(issueDate: string): Promise<void> {
   const paths = statePaths(issueDate);
-  const issue = validated(issueDate);
+  for (const stale of [paths.check, paths.checked, paths.confirmedNothing]) rmSync(stale, { force: true });
+  const issue = await previewedIssue(issueDate);
   const dead = await deadLinks(issue);
   const reply = parseCheckReply(replyJson(runChecker(issue, readCandidates(paths.candidates))), issue);
   const verdicts = combined(reply.verdicts, dead);
@@ -74,7 +84,6 @@ export async function commandCheck(issueDate: string): Promise<void> {
   for (const verdict of verdicts) console.log(`${verdict.verdict} ${verdict.sourceUrl}: ${verdict.reason}`);
   if (confirmsNothing(verdicts)) {
     const empty: CheckRecord = { issueDate, issueHash: sha256(readFileSync(paths.issueFile, 'utf8')), checkedAt: new Date().toISOString(), note, verdicts };
-    rmSync(paths.check, { force: true });
     writeJson(paths.confirmedNothing, empty);
     console.log(`the check confirmed no item, so there is no issue for ${issueDate}`);
     return;
@@ -86,7 +95,6 @@ export async function commandCheck(issueDate: string): Promise<void> {
   const record: CheckRecord = { issueDate, issueHash: sha256(content), checkedAt: new Date().toISOString(), note, verdicts };
   writeFileSync(paths.checked, content);
   writeJson(paths.check, record);
-  rmSync(paths.confirmedNothing, { force: true });
 }
 
 function checkedContent(issueDate: string, content: string): CheckRecord {

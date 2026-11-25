@@ -11,7 +11,10 @@ import {
   PREVIEW_DESCRIPTION_CHARS,
   WHY_MAX_WORDS,
 } from './sources.ts';
+import { isSafeImageUrl } from './preview.ts';
+import { longestSharedRun, sentenceCount, wordCount } from './text.ts';
 import type { Candidate, CandidateFile, WordRange } from './types.ts';
+import { SECTION_ORDER } from '../src/lib/sundaySections.ts';
 import type { CurrentIssue, SourcePreview, SundayIssueHeader, SundaySection, SundayStory } from '../src/types/sunday.ts';
 
 export interface RuleContext {
@@ -24,41 +27,8 @@ interface ItemWindow {
   to: Date;
 }
 
-const ABBREVIATIONS: RegExp = /\b(?:Mr|Mrs|Ms|Dr|St|Jr|Sr|vs|No|U\.S|U\.K|a\.m|p\.m|Jan|Feb|Mar|Apr|Jun|Jul|Aug|Sep|Sept|Oct|Nov|Dec|[A-Z])\./g;
-const SENTENCE_END: RegExp = /[.!?…]+["”’)]*(?=\s|$)/g;
 const SUMMARY_CHARS: number = 160;
 const TITLE_SUFFIX: string = ' | SundayStroke';
-const SECTION_ORDER: readonly string[] = ['golf', 'discGolf'];
-
-export function sentenceCount(text: string): number {
-  return (text.replace(ABBREVIATIONS, 'ABBR').trim().match(SENTENCE_END) ?? []).length;
-}
-
-export function wordCount(text: string): number {
-  return text.split(/\s+/).filter((word) => /[\p{L}\p{N}]/u.test(word)).length;
-}
-
-function plainWords(text: string): readonly string[] {
-  return text.toLowerCase().normalize('NFKD').replace(/[’']/g, '').split(/[^\p{L}\p{N}]+/u).filter((word) => word !== '');
-}
-
-export function longestSharedRun(ours: string, theirs: string): number {
-  const a = plainWords(ours);
-  const b = plainWords(theirs);
-  let best = 0;
-  let previous: number[] = new Array<number>(b.length + 1).fill(0);
-  for (const word of a) {
-    const current: number[] = new Array<number>(b.length + 1).fill(0);
-    b.forEach((other, at) => {
-      if (word !== other) return;
-      const run = (previous[at] ?? 0) + 1;
-      current[at + 1] = run;
-      best = Math.max(best, run);
-    });
-    previous = current;
-  }
-  return best;
-}
 
 function outsideRange(label: string, text: string, range: WordRange): string[] {
   const words = wordCount(text);
@@ -98,7 +68,7 @@ function previewProblems(label: string, preview: SourcePreview | null): string[]
   const problems: string[] = [];
   if (preview.title.trim() === '' || preview.siteName.trim() === '') problems.push(`${label}'s preview needs a title and a site name`);
   if (preview.description.length > PREVIEW_DESCRIPTION_CHARS) problems.push(`${label}'s preview description is over ${PREVIEW_DESCRIPTION_CHARS} characters`);
-  if (preview.image !== null && !/^https:\/\/[^\s"'<>]+$/.test(preview.image)) problems.push(`${label}'s preview image must be an https address`);
+  if (preview.image !== null && !isSafeImageUrl(preview.image)) problems.push(`${label}'s preview image must be an https address`);
   return problems;
 }
 
@@ -114,7 +84,8 @@ function storyProblems(story: SundayStory, candidate: Candidate, section: Sunday
   if (candidate.section !== section.key) problems.push(`${label} comes from ${candidate.sourceName}, which belongs in the ${candidate.section} section`);
   if (story.sourceLabel !== candidate.sourceName) problems.push(`${label} must credit "${candidate.sourceName}"`);
   const published = new Date(candidate.published);
-  if (!(published >= window.from && published < window.to)) problems.push(`${label} was published ${candidate.published}, outside the ${ITEM_WINDOW_DAYS} days before the issue`);
+  if (Number.isNaN(published.getTime())) problems.push(`${label}'s source has an unreadable date: ${candidate.published}`);
+  else if (!(published >= window.from && published < window.to)) problems.push(`${label} was published ${candidate.published}, outside the ${ITEM_WINDOW_DAYS} days before the issue`);
   else if (story.published !== madridDay(published).date) problems.push(`${label} must be dated ${madridDay(published).date}`);
   problems.push(...previewProblems(label, story.preview));
   problems.push(...copiedFrom(label, [story.headline, story.body, story.whyItMatters], sourceTexts(candidate, story.preview)));
@@ -139,7 +110,10 @@ function sectionProblems(section: SundaySection, byUrl: ReadonlyMap<string, Cand
 function copyProblems(issue: CurrentIssue): string[] {
   const stories = issue.sections.flatMap((section) => section.items.flatMap((story) => [story.headline, story.body, story.whyItMatters]));
   const texts = [issue.title, issue.pageTitle, issue.summary, issue.editorsNote, ...stories];
-  return COPY_RULES.filter((rule) => texts.some((text) => rule.pattern.test(text))).map((rule) => `the copy ${rule.reason}`);
+  return COPY_RULES.flatMap((rule) => {
+    const hit = texts.map((text) => rule.pattern.exec(text)?.[0]).find((match) => match !== undefined);
+    return hit === undefined ? [] : [`the copy ${rule.reason} ("${hit}")`];
+  });
 }
 
 function noteCopied(issue: CurrentIssue, byUrl: ReadonlyMap<string, Candidate>): string[] {
@@ -161,7 +135,8 @@ export function issueProblems(issue: CurrentIssue, context: RuleContext): readon
   if (total < 1 || total > MAX_ITEMS) problems.push(`${total} items; 1 to ${MAX_ITEMS} allowed`);
   const byUrl = new Map(context.candidates.candidates.map((candidate) => [candidate.link, candidate]));
   const seen = new Set<string>();
-  const window = isSunday(issue.slug) ? itemWindow(issue.slug) : { from: new Date(0), to: new Date(0) };
+  if (!isSunday(issue.slug)) return problems;
+  const window = itemWindow(issue.slug);
   for (const section of issue.sections) problems.push(...sectionProblems(section, byUrl, seen, window));
   problems.push(...noteCopied(issue, byUrl));
   return problems;

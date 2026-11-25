@@ -4,8 +4,12 @@ import type { CurrentIssue } from '../src/types/sunday.ts';
 
 const FENCE: string = '```';
 
+function oneLine(text: string): string {
+  return text.replace(/\s+/g, ' ').trim();
+}
+
 function verdictLine(verdict: ItemVerdict): string {
-  return `- ${verdict.sourceUrl}: ${verdict.reason}`;
+  return `- ${verdict.sourceUrl}: ${oneLine(verdict.reason)}`;
 }
 
 function factCheck(issue: CurrentIssue): readonly FactCheckPage[] {
@@ -21,8 +25,8 @@ export function pullBody(issue: CurrentIssue, record: CheckRecord): string {
   return [
     `${issue.title}, dated ${issue.date}. Written by the weekly run and checked item by item against its sources by a second, independent run.`,
     '',
-    "## Editor's note",
-    `${record.note.verdict === 'confirmed' ? 'Confirmed' : 'Rejected'} by the check: ${record.note.reason}`,
+    "## Editor's note, title and summary",
+    `${record.note.verdict === 'confirmed' ? 'Confirmed' : 'Rejected'} by the check: ${oneLine(record.note.reason)}`,
     '',
     `## Kept (${kept.length})`,
     ...kept.map(verdictLine),

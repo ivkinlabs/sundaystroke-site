@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
-import { issueProblems, longestSharedRun, sentenceCount, wordCount } from './rules.ts';
+import { issueProblems } from './rules.ts';
+import { longestSharedRun, sentenceCount, sharesWord, wordCount } from './text.ts';
 import { ISSUE_TWO, candidatesFor } from './testIssue.ts';
 import type { RuleContext } from './rules.ts';
 import type { CandidateFile } from './types.ts';
@@ -40,7 +41,7 @@ describe('issueProblems', () => {
     for (const promo of ['Film it with the Tracer app.', 'Get it on the App Store.', 'Download Golf GPS today.', 'Free on iPhone.']) {
       expect(problemsOf({ ...ISSUE_TWO, editorsNote: `${ISSUE_TWO.editorsNote} ${promo}` }), promo).toContain('names an app, a store or a download');
     }
-    expect(problemsOf(withGolf({ whyItMatters: 'Our app helps you do the same.' }))).toContain('names an app, a store or a download');
+    expect(problemsOf(withGolf({ whyItMatters: 'Our app helps you do the same.' }))).toContain('names an app, a store or a download ("app")');
   });
 
   it("needs an editor's note of 60 to 120 words", () => {
@@ -145,6 +146,13 @@ describe('text measures', () => {
   it('finds the longest run of words two texts share, ignoring case and punctuation', () => {
     expect(longestSharedRun('He won the title, at last!', 'At last he won the title')).toBe(4);
     expect(longestSharedRun('Nothing alike here', 'Totally different words')).toBe(0);
+    expect(longestSharedRun('the école won', 'at the ecole won')).toBe(3);
+    expect(longestSharedRun('he earned $1.2m there', 'earned $1.2m there')).toBe(3);
+  });
+
+  it('tells whether two titles share a meaningful word', () => {
+    expect(sharesWord('Scheffler wins at Sun City', 'Scheffler takes the Nedbank title')).toBe(true);
+    expect(sharesWord('Just a moment...', 'Scheffler takes the Nedbank title')).toBe(false);
   });
 });
 

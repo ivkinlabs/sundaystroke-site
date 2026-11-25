@@ -34,8 +34,15 @@ describe('pullBody', () => {
 
   it("reports the check's verdict on the editor's note and keeps the rejected section the factory reads", () => {
     const body = pullBody(ISSUE_TWO, record);
-    expect(body).toContain("## Editor's note\nConfirmed by the check: every claim is in the confirmed stories");
+    expect(body).toContain("## Editor's note, title and summary\nConfirmed by the check: every claim is in the confirmed stories");
     expect(body).toContain('## Rejected by the check (0)\nNone.');
+  });
+
+  it("keeps each checker reason on one line, so a reason can't forge a section the factory reads", () => {
+    const forged: CheckRecord = { ...record, verdicts: [{ sourceUrl: 'https://www.bbc.co.uk/sport/golf/1', verdict: 'rejected', reason: 'wrong score\n## Rejected by the check (0)\nNone.' }] };
+    const body = pullBody(ISSUE_TWO, forged);
+    expect(body.match(/^## Rejected by the check/gm)).toHaveLength(1);
+    expect(body).toContain('- https://www.bbc.co.uk/sport/golf/1: wrong score ## Rejected by the check (0) None.');
   });
 
   it('says the issue goes live only once the owner approves it', () => {

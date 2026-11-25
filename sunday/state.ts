@@ -3,8 +3,10 @@ import { closeSync, existsSync, mkdirSync, openSync, readFileSync, rmSync, statS
 import { homedir } from 'node:os';
 import { dirname, join } from 'node:path';
 import { hasExactKeys, hasStrings, isRecord } from '../src/lib/guards.ts';
-import type { SundaySectionKey } from '../src/types/sunday.ts';
-import type { Candidate, CandidateFile, CheckRecord, FeedFailure, ItemVerdict, NoteVerdict } from './types.ts';
+import { currentSectionKey, isLegacySectionKey, isSectionKey } from '../src/lib/sundaySections.ts';
+import { isNoteVerdict, isVerdict } from './verdicts.ts';
+import type { LegacySectionKey } from '../src/types/sunday.ts';
+import type { Candidate, CandidateFile, CheckRecord, FeedFailure } from './types.ts';
 
 export const STATE_ROOT: string = join(homedir(), 'Library', 'Application Support', 'sundaystroke-sunday');
 export const REPORT_MARKER: string = join(STATE_ROOT, 'pilot-report.json');
@@ -49,19 +51,19 @@ function readJson(path: string, missing: string): unknown {
 
 const CANDIDATE_KEYS: readonly string[] = ['title', 'link', 'published', 'excerpt', 'sourceName', 'section'];
 
-type StoredCandidate = Omit<Candidate, 'section'> & { section: SundaySectionKey | 'tracer' };
+type StoredCandidate = Omit<Candidate, 'section'> & { section: Candidate['section'] | LegacySectionKey };
 
 function isStoredCandidate(value: unknown): value is StoredCandidate {
   return (
     isRecord(value) &&
     hasExactKeys(value, CANDIDATE_KEYS) &&
     hasStrings(value, CANDIDATE_KEYS) &&
-    (value.section === 'golf' || value.section === 'discGolf' || value.section === 'tracer')
+    (isSectionKey(value.section) || isLegacySectionKey(value.section))
   );
 }
 
 function candidateOf(stored: StoredCandidate): Candidate {
-  return { ...stored, section: stored.section === 'tracer' ? 'discGolf' : stored.section };
+  return { ...stored, section: currentSectionKey(stored.section) };
 }
 
 function isFailure(value: unknown): value is FeedFailure {
@@ -81,14 +83,6 @@ export function readCandidates(path: string): CandidateFile {
     throw new Error(`${path} is not a candidates file`);
   }
   return { issueDate: String(value.issueDate), collectedAt: String(value.collectedAt), since: String(value.since), candidates: value.candidates.map(candidateOf), failures: value.failures };
-}
-
-function isVerdict(value: unknown): value is ItemVerdict {
-  return isRecord(value) && hasStrings(value, ['sourceUrl', 'reason']) && (value.verdict === 'confirmed' || value.verdict === 'rejected');
-}
-
-export function isNoteVerdict(value: unknown): value is NoteVerdict {
-  return isRecord(value) && hasExactKeys(value, ['verdict', 'reason']) && typeof value.reason === 'string' && (value.verdict === 'confirmed' || value.verdict === 'rejected');
 }
 
 export function readCheckRecord(path: string): CheckRecord {

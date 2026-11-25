@@ -12,11 +12,11 @@ For every item in every section of the issue:
 4. Confirm a disc golf story is only in the `discGolf` section, and the `golf` section has none.
 5. Confirm the item names no app, store or download, and promotes nothing.
 
-Then check the issue's `editorsNote` against the items you confirmed: every fact in it must be stated in one of them, and it must be in our own words and promote nothing. A note that relies on an item you rejected, or says anything none of the confirmed items say, is rejected. Ignore each item's `preview`: the site's own code read it from the page.
+Then check the issue's `editorsNote`, `pageTitle` and `summary` together against the items you confirmed: every fact in them must be stated in one of those items, and they must be in our own words and promote nothing. If any of them names or relies on an item you rejected, or says anything none of the confirmed items say, reject the note. Ignore each item's `preview`: the site's own code read it from the page.
 
 When in doubt, reject.
 
-Your final message must be only this JSON, with one verdict on the editor's note and one for every item and nothing before or after it:
+Your final message must be only this JSON, with one verdict on the editor's note, title and summary and one for every item and nothing before or after it:
 
 ```json
 {

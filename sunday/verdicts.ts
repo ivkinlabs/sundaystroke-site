@@ -1,6 +1,5 @@
 import { hasExactKeys, hasStrings, isRecord } from '../src/lib/guards.ts';
-import { isNoteVerdict } from './state.ts';
-import type { CheckReply, ItemVerdict } from './types.ts';
+import type { CheckReply, ItemVerdict, NoteVerdict } from './types.ts';
 import type { CurrentIssue } from '../src/types/sunday.ts';
 
 export interface CheckedIssue {
@@ -11,13 +10,17 @@ export interface CheckedIssue {
 const VERDICT_KEYS: readonly string[] = ['sourceUrl', 'verdict', 'reason'];
 const FILE_KEYS: readonly string[] = ['issueDate', 'note', 'verdicts'];
 
-function isVerdict(value: unknown): value is ItemVerdict {
+export function isVerdict(value: unknown): value is ItemVerdict {
   return (
     isRecord(value) &&
     hasExactKeys(value, VERDICT_KEYS) &&
     hasStrings(value, VERDICT_KEYS) &&
     (value.verdict === 'confirmed' || value.verdict === 'rejected')
   );
+}
+
+export function isNoteVerdict(value: unknown): value is NoteVerdict {
+  return isRecord(value) && hasExactKeys(value, ['verdict', 'reason']) && typeof value.reason === 'string' && (value.verdict === 'confirmed' || value.verdict === 'rejected');
 }
 
 export function itemUrls(issue: CurrentIssue): readonly string[] {

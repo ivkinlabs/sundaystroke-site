@@ -16,6 +16,7 @@ export function isoDate(display: string): string {
 export function displayDate(iso: string): string {
   const match = /^(\d{4})-(\d{2})-(\d{2})$/.exec(iso);
   const month = match === null ? undefined : MONTHS[Number(match[2]) - 1];
-  if (match === null || month === undefined) throw new Error(`Not a yyyy-mm-dd date: ${iso}`);
+  const real = new Date(`${iso}T00:00:00Z`);
+  if (match === null || month === undefined || Number.isNaN(real.getTime()) || real.toISOString().slice(0, 10) !== iso) throw new Error(`Not a yyyy-mm-dd date: ${iso}`);
   return `${Number(match[3])} ${month} ${match[1]}`;
 }
