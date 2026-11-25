@@ -4,13 +4,16 @@ on:
   pull_request:
     branches:
       - main
+  push:
+    branches:
+      - main
 
 permissions:
   contents: read
 
 concurrency:
-  group: factory-pr-check-${{ github.event.pull_request.number }}
-  cancel-in-progress: true
+  group: factory-pr-check-${{ github.event.pull_request.number || github.sha }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
 jobs:
   build:
