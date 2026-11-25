@@ -1,4 +1,4 @@
-import { existsSync, readFileSync, readdirSync, writeFileSync } from 'node:fs';
+import { existsSync, readFileSync, readdirSync, rmSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { parseIssue, sortedIssues } from '../src/lib/sundayIssue.ts';
 import { runChecker, replyJson } from './checker.ts';
@@ -10,7 +10,7 @@ import { DEAD_LINK_STATUSES, pageStatus } from './site.ts';
 import { SITE_REPO } from './sources.ts';
 import { ISSUES_DIR, readCandidates, readCheckRecord, sha256, statePaths, writeJson } from './state.ts';
 import type { CheckRecord, ItemVerdict } from './types.ts';
-import { applyVerdicts, itemUrls, parseVerdicts } from './verdicts.ts';
+import { applyVerdicts, confirmsNothing, itemUrls, parseVerdicts } from './verdicts.ts';
 import type { SundayIssue } from '../src/types/sunday.ts';
 
 function localIssues(): readonly SundayIssue[] {
@@ -68,6 +68,14 @@ export async function commandCheck(issueDate: string): Promise<void> {
   const issue = validated(issueDate);
   const dead = await deadLinks(issue);
   const verdicts = combined(parseVerdicts(replyJson(runChecker(issue, readCandidates(paths.candidates))), issue), dead);
+  for (const verdict of verdicts) console.log(`${verdict.verdict} ${verdict.sourceUrl}: ${verdict.reason}`);
+  if (confirmsNothing(verdicts)) {
+    const empty: CheckRecord = { issueDate, issueHash: sha256(readFileSync(paths.issueFile, 'utf8')), checkedAt: new Date().toISOString(), verdicts };
+    rmSync(paths.check, { force: true });
+    writeJson(paths.confirmedNothing, empty);
+    console.log(`the check confirmed no item, so there is no issue for ${issueDate}`);
+    return;
+  }
   const checked = applyVerdicts(issue, verdicts);
   const content = `${JSON.stringify(checked.issue, null, 2)}\n`;
   writeFileSync(paths.issueFile, content);
@@ -75,7 +83,7 @@ export async function commandCheck(issueDate: string): Promise<void> {
   const record: CheckRecord = { issueDate, issueHash: sha256(content), checkedAt: new Date().toISOString(), verdicts };
   writeFileSync(paths.checked, content);
   writeJson(paths.check, record);
-  for (const verdict of verdicts) console.log(`${verdict.verdict} ${verdict.sourceUrl}: ${verdict.reason}`);
+  rmSync(paths.confirmedNothing, { force: true });
 }
 
 function checkedContent(issueDate: string, content: string): CheckRecord {

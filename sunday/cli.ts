@@ -1,6 +1,6 @@
 import { issueDateArgument } from './calendar.ts';
 import { commandFind } from './collect.ts';
-import { commandPlan } from './facts.ts';
+import { commandDone, commandPlan } from './facts.ts';
 import { issuesOnMain, fetchMain } from './github.ts';
 import { commandCheck, commandOpenPull, commandValidate } from './issueCheck.ts';
 import { REPORT_MARKER, withLock, writeJson } from './state.ts';
@@ -25,6 +25,7 @@ function markReported(): void {
 
 const COMMANDS: Readonly<Record<string, Command>> = {
   plan: commandPlan,
+  done: commandDone,
   find: locked(commandFind),
   validate: (args) => commandValidate(dateArgument(args)),
   check: locked(commandCheck),

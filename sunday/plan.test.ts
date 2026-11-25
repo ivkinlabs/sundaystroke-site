@@ -5,6 +5,7 @@ import type { PlanFacts } from './types.ts';
 const quiet: Omit<PlanFacts, 'today'> = {
   issueState: 'none',
   candidatesCollected: false,
+  checkerConfirmedNothing: false,
   publishedIssues: 1,
   reportSent: false,
 };
@@ -32,6 +33,10 @@ describe('plan', () => {
     expect(plan(at('2026-11-15', 0, 8, { issueState: 'open-pr' })).steps).toEqual([]);
     expect(plan(at('2026-11-16', 1, 8, { issueState: 'open-pr' })).steps).toEqual([]);
     expect(plan(at('2026-11-15', 0, 15, { issueState: 'merged' })).steps).toEqual([]);
+  });
+
+  it('leaves nothing to do once the checker confirmed no story this week', () => {
+    expect(plan(at('2026-11-29', 0, 9, { candidatesCollected: true, checkerConfirmedNothing: true })).steps).toEqual([]);
   });
 
   it('never writes an issue for a Sunday already past', () => {

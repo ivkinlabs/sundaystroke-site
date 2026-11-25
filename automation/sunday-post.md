@@ -9,7 +9,7 @@ Your working directory is a fresh worktree of the site on `origin/main`. Every s
 1. `node sunday/cli.ts plan` prints JSON: `issueDate` (call it `D`), `steps` (what is due now, in order) and `paths`.
 2. If `steps` is empty, you are done: stop without any message.
 3. `npm ci`
-4. Do each step below in the order `steps` lists them. If a step fails, stop there: don't message anyone and don't work around the failure.
+4. Do each step below in the order `steps` lists them. If a step fails, stop there: don't message anyone and don't work around the failure. After your run the factory runs `sunday/done.sh`, which fails while a step is still due and alerts the owner.
 
 ## find
 
@@ -28,7 +28,7 @@ Your working directory is a fresh worktree of the site on `origin/main`. Every s
 
 ## check
 
-`node sunday/cli.ts check --date D` hands the issue to a second, independent checker that reads every source page and confirms or rejects each item, drops the rejected items and any dead link, and records what it checked. Don't touch the issue file after it; if it says nothing was confirmed, stop: there is no issue this week. Then `npm run build`.
+`node sunday/cli.ts check --date D` hands the issue to a second, independent checker that reads every source page and confirms or rejects each item, drops the rejected items and any dead link, and records what it checked. Don't touch the issue file after it; if it says nothing was confirmed, stop: there is no issue this week, and it has recorded that, so the factory's check after your run passes. Otherwise `npm run build`.
 
 ## open-pr
 
