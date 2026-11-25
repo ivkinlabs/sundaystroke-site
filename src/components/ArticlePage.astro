@@ -37,7 +37,7 @@ const seo: PageSeo = dates === null
         <slot />
       </Prose>
 
-      <StoreCalls calls={calls} />
+      {calls.length > 0 && <StoreCalls calls={calls} />}
     </article>
   </main>
   <SiteFooter />

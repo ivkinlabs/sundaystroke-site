@@ -1,4 +1,4 @@
-import { existsSync, readFileSync, readdirSync, rmSync, writeFileSync } from 'node:fs';
+import { readFileSync, readdirSync, rmSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { parseIssue, sortedIssues } from '../src/lib/sundayIssue.ts';
 import { runChecker, replyJson } from './checker.ts';
@@ -10,8 +10,8 @@ import { DEAD_LINK_STATUSES, pageStatus } from './site.ts';
 import { SITE_REPO } from './sources.ts';
 import { ISSUES_DIR, readCandidates, readCheckRecord, sha256, statePaths, writeJson } from './state.ts';
 import type { CheckRecord, ItemVerdict } from './types.ts';
-import { applyVerdicts, confirmsNothing, itemUrls, parseVerdicts } from './verdicts.ts';
-import type { SundayIssue } from '../src/types/sunday.ts';
+import { applyVerdicts, confirmsNothing, itemUrls, parseCheckReply } from './verdicts.ts';
+import type { CurrentIssue, SundayIssue } from '../src/types/sunday.ts';
 
 function localIssues(): readonly SundayIssue[] {
   return sortedIssues(
@@ -28,15 +28,15 @@ function changedFiles(): readonly string[] {
   return `${tracked}\n${untracked}`.split('\n').map((line) => line.trim()).filter((line) => line !== '');
 }
 
-export function validated(issueDate: string): SundayIssue {
+export function validated(issueDate: string): CurrentIssue {
   const paths = statePaths(issueDate);
   const issues = localIssues();
   const issue = issues.find((candidate) => candidate.slug === issueDate);
   if (issue === undefined) throw new Error(`no issue file ${paths.issueFile}`);
+  if (issue.format !== 2) throw new Error(`${paths.issueFile} must use the current issue format (format 2)`);
   const problems = [...issueProblems(issue, {
     earlierIssues: issues.filter((earlier) => earlier.slug !== issueDate),
     candidates: readCandidates(paths.candidates),
-    mediaExists: (sitePath) => existsSync(join('public', sitePath)),
   })];
   const others = changedFiles().filter((file) => file !== paths.issueFile);
   if (others.length > 0) problems.push(`only ${paths.issueFile} may change; also changed: ${others.join(', ')}`);
@@ -49,7 +49,7 @@ export function commandValidate(issueDate: string): void {
   console.log(`issue ${issue.number} (${issue.slug}) follows the rules`);
 }
 
-async function deadLinks(issue: SundayIssue): Promise<readonly ItemVerdict[]> {
+async function deadLinks(issue: CurrentIssue): Promise<readonly ItemVerdict[]> {
   const dead: ItemVerdict[] = [];
   for (const url of itemUrls(issue)) {
     const status = await pageStatus(url);
@@ -67,20 +67,23 @@ export async function commandCheck(issueDate: string): Promise<void> {
   const paths = statePaths(issueDate);
   const issue = validated(issueDate);
   const dead = await deadLinks(issue);
-  const verdicts = combined(parseVerdicts(replyJson(runChecker(issue, readCandidates(paths.candidates))), issue), dead);
+  const reply = parseCheckReply(replyJson(runChecker(issue, readCandidates(paths.candidates))), issue);
+  const verdicts = combined(reply.verdicts, dead);
+  const note = reply.note;
+  console.log(`${note.verdict} the editor's note: ${note.reason}`);
   for (const verdict of verdicts) console.log(`${verdict.verdict} ${verdict.sourceUrl}: ${verdict.reason}`);
   if (confirmsNothing(verdicts)) {
-    const empty: CheckRecord = { issueDate, issueHash: sha256(readFileSync(paths.issueFile, 'utf8')), checkedAt: new Date().toISOString(), verdicts };
+    const empty: CheckRecord = { issueDate, issueHash: sha256(readFileSync(paths.issueFile, 'utf8')), checkedAt: new Date().toISOString(), note, verdicts };
     rmSync(paths.check, { force: true });
     writeJson(paths.confirmedNothing, empty);
     console.log(`the check confirmed no item, so there is no issue for ${issueDate}`);
     return;
   }
-  const checked = applyVerdicts(issue, verdicts);
+  const checked = applyVerdicts(issue, { note, verdicts });
   const content = `${JSON.stringify(checked.issue, null, 2)}\n`;
   writeFileSync(paths.issueFile, content);
   validated(issueDate);
-  const record: CheckRecord = { issueDate, issueHash: sha256(content), checkedAt: new Date().toISOString(), verdicts };
+  const record: CheckRecord = { issueDate, issueHash: sha256(content), checkedAt: new Date().toISOString(), note, verdicts };
   writeFileSync(paths.checked, content);
   writeJson(paths.check, record);
   rmSync(paths.confirmedNothing, { force: true });

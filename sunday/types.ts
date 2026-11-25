@@ -43,6 +43,7 @@ export interface CheckRecord {
   issueDate: string;
   issueHash: string;
   checkedAt: string;
+  note: NoteVerdict;
   verdicts: readonly ItemVerdict[];
 }
 
@@ -83,4 +84,19 @@ export interface IssueProgress {
 export interface Plan {
   issueDate: string;
   steps: readonly Step[];
+}
+
+export interface WordRange {
+  min: number;
+  max: number;
+}
+
+export interface NoteVerdict {
+  verdict: VerdictKind;
+  reason: string;
+}
+
+export interface CheckReply {
+  note: NoteVerdict;
+  verdicts: readonly ItemVerdict[];
 }

@@ -1,6 +1,6 @@
 export type AppKey = 'tracer' | 'golfGps';
 
-type SharedCampaign = 'web-compare' | 'web-sunday';
+type SharedCampaign = 'web-compare';
 
 export type TracerCampaign = 'web-tracer-hub' | 'web-tracer-home' | 'web-tracer-discgolf' | 'web-tracer-howto' | SharedCampaign;
 

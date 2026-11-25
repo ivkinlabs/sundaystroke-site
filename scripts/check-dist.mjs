@@ -1,5 +1,6 @@
 import { readFileSync, readdirSync, existsSync, statSync } from 'node:fs';
 import { join, relative } from 'node:path';
+import { sundayPageProblems } from '../src/lib/promotion.ts';
 
 const DIST = 'dist';
 const SITE_HOST = 'sundaystroke.com';
@@ -89,6 +90,7 @@ for (const file of files) {
     problems.push(`${page}: shows a currency amount`);
   }
   if (page.startsWith('tracer/') && TRACER_DISTANCE.test(text)) problems.push(`${page}: says Tracer measures distance`);
+  if (page.startsWith('sunday/')) problems.push(...sundayPageProblems(html).map((problem) => `${page}: ${problem}`));
   if (page.startsWith('compare/') && !CHECKED_ON.test(text)) problems.push(`${page}: no "Checked on" date`);
   if (!html.includes('static.cloudflareinsights.com/beacon.min.js') || !html.includes('data-cf-beacon')) problems.push(`${page}: no analytics beacon`);
   if (!html.includes('name="google-site-verification"')) problems.push(`${page}: no verification meta`);

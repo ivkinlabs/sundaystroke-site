@@ -1,10 +1,9 @@
 ---
 import ArticlePage from '../../../components/ArticlePage.astro';
-import ClipPair from '../../../components/ClipPair.astro';
+import SundayIssueBody from '../../../components/SundayIssueBody.astro';
 import { SUNDAY_ISSUES } from '../../../data/sunday';
 import { sitePath } from '../../../utils/paths';
 import type { SundayIssue } from '../../../types/sunday';
-import { SUNDAY_CALLS } from '../../../data/storeCalls';
 import type { GetStaticPaths } from 'astro';
 
 interface Props {
@@ -24,23 +23,9 @@ const { issue } = Astro.props;
   heading={issue.title}
   dates={{ published: issue.date, modified: issue.date }}
   banner={null}
-  calls={SUNDAY_CALLS}
+  calls={[]}
 >
-  <h2>This week from us</h2>
-  <p>{issue.leadText}</p>
-  <ClipPair clips={issue.leadClips} />
+  <SundayIssueBody issue={issue} />
 
-  {issue.sections.map((section) => (
-    <section data-section={section.key}>
-      <h2>{section.heading}</h2>
-      {section.items.map((item) => (
-        <div data-sunday-item>
-          <h3>{item.headline}</h3>
-          <p>{item.body} <a href={item.sourceUrl}>Read more at {item.sourceLabel}</a></p>
-        </div>
-      ))}
-    </section>
-  ))}
-
-  <p><a href={sitePath('/sunday/')}>All issues</a></p>
+  <p class="mt-12"><a href={sitePath('/sunday/')}>All issues</a></p>
 </ArticlePage>

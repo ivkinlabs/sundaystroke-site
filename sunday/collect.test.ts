@@ -8,7 +8,7 @@ const story = (link: string, published: string, sourceName: string = 'GOLF.com')
   published,
   excerpt: 'e',
   sourceName,
-  section: sourceName === 'PDGA' ? 'tracer' : 'golf',
+  section: sourceName === 'PDGA' ? 'discGolf' : 'golf',
 });
 
 describe('collect', () => {

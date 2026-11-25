@@ -1,0 +1,40 @@
+---
+import SundayStoryCard from './SundayStoryCard.astro';
+import { issueView } from '../lib/sundayView';
+import type { IssueView, SundayIssue } from '../types/sunday';
+
+interface Props {
+  issue: SundayIssue;
+}
+
+const view: IssueView = issueView(Astro.props.issue);
+---
+{view.editorsNote !== null && (
+  <section aria-labelledby="this-week">
+    <h2 id="this-week">This week in golf</h2>
+    <p class="text-body-lg">{view.editorsNote}</p>
+  </section>
+)}
+
+<nav aria-labelledby="in-this-issue" class="ss-card not-prose my-10 p-5 sm:p-6">
+  <h2 id="in-this-issue" class="ss-eyebrow mb-4">In this issue</h2>
+  <ol class="flex flex-col gap-4">
+    {view.sections.map((part) => (
+      <li>
+        <a href={`#${part.anchor}`} class="text-callout text-ice hover:underline">{part.heading}</a>
+        <ol class="mt-2 flex flex-col gap-2 border-l border-line pl-4">
+          {part.stories.map((story) => (
+            <li><a href={`#${story.anchor}`} class="text-body text-mist hover:text-volt hover:underline">{story.headline}</a></li>
+          ))}
+        </ol>
+      </li>
+    ))}
+  </ol>
+</nav>
+
+{view.sections.map((part) => (
+  <section aria-labelledby={part.anchor} data-section={part.key} class="border-t border-line pt-2">
+    <h2 id={part.anchor} class="scroll-mt-28">{part.heading}</h2>
+    {part.stories.map((story) => <SundayStoryCard story={story} />)}
+  </section>
+))}

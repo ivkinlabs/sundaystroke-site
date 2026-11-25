@@ -1,0 +1,37 @@
+---
+import type { SourcePreview } from '../types/sunday';
+
+interface Props {
+  preview: SourcePreview | null;
+  sourceUrl: string;
+  sourceLabel: string;
+}
+
+const { preview, sourceUrl, sourceLabel } = Astro.props;
+const siteName: string = preview?.siteName ?? sourceLabel;
+const title: string = preview?.title ?? `Read the full story at ${sourceLabel}`;
+const description: string = preview?.description ?? '';
+const image: string | null = preview?.image ?? null;
+---
+<a
+  data-source-preview
+  href={sourceUrl}
+  rel="noopener"
+  class="group flex flex-col overflow-hidden rounded-tag border border-line bg-raised no-underline transition-colors hover:border-volt focus-visible:border-volt sm:flex-row"
+>
+  {image !== null && (
+    <img
+      src={image}
+      alt=""
+      loading="lazy"
+      decoding="async"
+      referrerpolicy="no-referrer"
+      class="aspect-[1.91/1] w-full bg-void object-cover sm:w-48 sm:shrink-0"
+    />
+  )}
+  <span class="flex min-w-0 flex-col gap-1.5 p-4">
+    <span class="ss-tag text-mist">{siteName}</span>
+    <span class="text-callout text-ice group-hover:underline">{title}</span>
+    {description !== '' && <span class="line-clamp-3 text-subhead text-mist">{description}</span>}
+  </span>
+</a>

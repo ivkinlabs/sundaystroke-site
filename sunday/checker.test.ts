@@ -23,6 +23,7 @@ describe('the source check', () => {
       issueDate: '2026-11-15',
       issueHash: 'h',
       checkedAt: '2026-11-14T08:00:00Z',
+      note: { verdict: 'confirmed', reason: 'only kept facts' },
       verdicts: [
         { sourceUrl: 'https://www.bbc.co.uk/sport/golf/1', verdict: 'confirmed', reason: 'matches' },
         { sourceUrl: 'https://www.pdga.com/news/1', verdict: 'rejected', reason: 'wrong year' },
