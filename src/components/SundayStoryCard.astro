@@ -1,0 +1,24 @@
+---
+import SundaySourceCard from './SundaySourceCard.astro';
+import { displayDay } from '../utils/dates';
+import type { SundayItem } from '../types/sunday';
+
+interface Props {
+  item: SundayItem;
+  anchor: string;
+}
+
+const { item, anchor } = Astro.props;
+---
+<div id={anchor} class="ss-card mb-6 scroll-mt-28 p-5 md:p-6" data-sunday-item>
+  <p class="ss-tag !my-0 text-mist">
+    {item.sourceLabel}
+    {item.published !== null && <> · <time datetime={item.published}>{displayDay(item.published)}</time></>}
+  </p>
+  <h3 class="!mt-2">{item.headline}</h3>
+  <p>{item.body}</p>
+  {item.whyItMatters !== null && (
+    <p><strong>Why it matters:</strong> {item.whyItMatters}</p>
+  )}
+  <SundaySourceCard item={item} />
+</div>

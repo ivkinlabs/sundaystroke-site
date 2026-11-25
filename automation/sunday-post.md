@@ -17,18 +17,26 @@ Your working directory is a fresh worktree of the site on `origin/main`. Every s
 
 ## write
 
+The model is a golf newsletter people read for its own sake: a 3 to 5 minute read with a clear voice, enough to talk about golf this week, and a link to every full story.
+
 1. Read `paths.candidates`. Golf stories come from the golf feeds; disc golf stories come from the PDGA and DGPT feeds and go only in the Disc golf section.
-2. Choose 3 to 5 stories a club golfer would care about this week (results, rule or tour news, a practical playing idea). A thin week gets fewer stories, down to one; never pad it. Skip live blogs, betting, gear deals and listicles.
-3. Open each chosen story's page and read it before you write about it. Write every item in your own words from what the page says: a short headline and at most two sentences. Never copy a sentence, never quote more than a few words, never use the source's photos. Every name, number and date must be on that page.
-4. The issue is news, not an advert. It has no lead of ours, no clip and no store link, and it never names an app (ours or anyone else's), an app store or a download.
-5. Write `src/data/sunday/D.json` with exactly these fields: `slug` = `D`, the next `number`, `date` = "Sunday <d> <Month> <yyyy>", `title` = "The Sunday post, issue <n>", a `pageTitle` naming the week's two or three main stories and ending in " | SundayStroke", a one-line `summary`, then `sections`: a `golf` section and a `tracer` section (the page heads it "Disc golf"; leave out a section with no story), each only `key` and `items`. Each item is `headline`, `body`, `sourceLabel` and `sourceUrl`: `sourceLabel` is the feed's name as `paths.candidates` gives it; `sourceUrl` is the story's `link`, unchanged. Earlier issue files carry a `leadText`, `leadClips` and section `heading`s from an older layout: never copy them.
-6. Never change any other file. Earlier issues, their dates and their wording stay exactly as published.
-7. Copy rules for everything you write: plain words for golfers; no prices; no promotion: never name an app, an app store or a download; never the word "shot" followed by "tracer"; nothing about baseball; never name tools, vendors, the tech stack or how this run works; disc golf only in the Disc golf section.
-8. `node sunday/cli.ts validate --date D`, then `npm run build`. Fix what they report and run both again until they pass.
+2. Choose 3 to 5 stories a club golfer would care about this week (results, rule or tour news, a practical playing idea). `validate` refuses fewer than 3; if the week truly has fewer worth telling, stop. Skip live blogs, betting, gear deals and listicles.
+3. Open each chosen story's page and read it before you write about it. For each story write, in your own words from what the page says:
+   - `headline`: short and plain.
+   - `body`: 60 to 150 words on what happened, enough that a golfer could retell it. Never copy a sentence, never quote more than a few words; `validate` refuses eight words in a row taken from the feed excerpt or the page's own summary.
+   - `whyItMatters`: one sentence of 6 to 35 words on why it matters to a club golfer.
+   Every name, number and date must be on that page. Never use the source's photos: the page shows the source's own share card under each story.
+4. Write the `editorNote` last: 60 to 120 words in our own voice saying what the week in golf was about, drawn only from the stories you chose. No claim that isn't on one of their pages, and no disc golf.
+5. The issue is news, not an advert. It has no lead clip and no store link, and it never names an app (ours or anyone else's), an app store or a download.
+6. Write `src/data/sunday/D.json` with exactly these fields, in this order: `slug` = `D`, the next `number`, `date` = "Sunday <d> <Month> <yyyy>", `title` = "The Sunday post, issue <n>", a `pageTitle` naming the week's two or three main stories and ending in " | SundayStroke", a one-line `summary`, the `editorNote`, then `sections`: a `golf` section and a `tracer` section (the page heads it "Disc golf"; leave out a section with no story), each only `key` and `items`. Each item is `headline`, `body`, `whyItMatters`, `sourceLabel`, `sourceUrl`, `published` and `preview`: `sourceLabel` is the feed's name as `paths.candidates` gives it; `sourceUrl` is the story's `link`, unchanged; write `published` and `preview` as `null`. Earlier issue files carry a `leadText`, `leadClips` and section `heading`s from an older layout, and lack the newer fields: never copy their shape.
+7. `node sunday/cli.ts preview --date D` fills each item's `published` (the source's date) and `preview` (the title, site name, description and share image from the source page's Open Graph card, or `null` for a plain text card) by reading each page. Never edit those two fields by hand.
+8. Never change any other file. Earlier issues, their dates and their wording stay exactly as published.
+9. Copy rules for everything you write: plain words for golfers; no prices; no promotion: never name an app, an app store or a download; never the word "shot" followed by "tracer"; nothing about baseball; never name tools, vendors, the tech stack or how this run works; disc golf only in the Disc golf section.
+10. `node sunday/cli.ts validate --date D`, then `npm run build`. Fix what they report (run `preview` again after changing a story) and run both again until they pass.
 
 ## check
 
-`node sunday/cli.ts check --date D` hands the issue to a second, independent checker that reads every source page and confirms or rejects each item, drops the rejected items and any dead link, and records what it checked. Don't touch the issue file after it; if it says nothing was confirmed, stop: there is no issue this week, and it has recorded that, so the factory's check after your run passes. Otherwise `npm run build`.
+`node sunday/cli.ts check --date D` hands the issue to a second, independent checker that reads every source page, confirms or rejects each item and the editor's note, drops the rejected items and any dead link, and records what it checked. Don't touch the issue file after it; if it rejects the editor's note it fails, and the run stops there. If it says nothing was confirmed, stop: there is no issue this week, and it has recorded that, so the factory's check after your run passes. Otherwise `npm run build`.
 
 ## open-pr
 

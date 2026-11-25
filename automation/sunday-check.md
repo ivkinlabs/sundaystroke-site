@@ -7,9 +7,11 @@ Below this prompt are two JSON documents: the issue, and the week's collected st
 For every item in every section of the issue:
 
 1. Fetch its `sourceUrl` and read the page. If it doesn't open, or isn't the story, reject the item.
-2. Confirm every fact in the item's `headline` and `body` against the page: names, numbers, scores, places, dates and who did what. Anything the page doesn't state, or states differently, rejects the item.
+2. Confirm every fact in the item's `headline`, `body` and `whyItMatters` against the page: names, numbers, scores, places, dates and who did what. Anything the page doesn't state, or states differently, rejects the item. `whyItMatters` may draw a lesson for a club golfer, but any fact in it must be on the page.
 3. Confirm it is in our own words: no sentence copied from the page, no quote longer than a few words.
 4. Confirm a disc golf story is only in the `tracer` section, and the `golf` section has none.
+
+Then check the issue's `editorNote`: every fact in it must be on the page of an item you confirmed. A note that states something no confirmed item's page says, or leans on an item you rejected, is rejected.
 
 When in doubt, reject.
 
@@ -18,6 +20,7 @@ Your final message must be only this JSON, with one verdict for every item and n
 ```json
 {
   "issueDate": "yyyy-mm-dd",
+  "editorNote": { "verdict": "confirmed", "reason": "<what you checked, in one line>" },
   "verdicts": [
     { "sourceUrl": "<the item's sourceUrl, unchanged>", "verdict": "confirmed", "reason": "<what you checked, in one line>" },
     { "sourceUrl": "<…>", "verdict": "rejected", "reason": "<what doesn't match, in one line>" }

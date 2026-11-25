@@ -7,7 +7,7 @@ import { FACTORY_LABEL, fetchMain, issueBranch, openPull, remoteBranchSha } from
 import { pullBody } from './pullBody.ts';
 import { issueFileProblems } from './rules.ts';
 import { DEAD_LINK_STATUSES, pageStatus } from './site.ts';
-import { SITE_REPO } from './sources.ts';
+import { MIN_CHECKED_ITEMS, MIN_DRAFT_ITEMS, SITE_REPO } from './sources.ts';
 import { ISSUES_DIR, readCandidates, readCheckRecord, sha256, statePaths, writeJson } from './state.ts';
 import type { CheckRecord, ItemVerdict } from './types.ts';
 import { applyVerdicts, confirmsNothing, itemUrls, parseVerdicts } from './verdicts.ts';
@@ -28,7 +28,7 @@ function changedFiles(): readonly string[] {
   return `${tracked}\n${untracked}`.split('\n').map((line) => line.trim()).filter((line) => line !== '');
 }
 
-export function validated(issueDate: string): SundayIssue {
+export function validated(issueDate: string, minItems: number): SundayIssue {
   const paths = statePaths(issueDate);
   const issues = localIssues();
   const issue = issues.find((candidate) => candidate.slug === issueDate);
@@ -37,6 +37,7 @@ export function validated(issueDate: string): SundayIssue {
   const problems = [...issueFileProblems(json, issue, {
     earlierIssues: issues.filter((earlier) => earlier.slug !== issueDate),
     candidates: readCandidates(paths.candidates),
+    minItems,
   })];
   const others = changedFiles().filter((file) => file !== paths.issueFile);
   if (others.length > 0) problems.push(`only ${paths.issueFile} may change; also changed: ${others.join(', ')}`);
@@ -45,7 +46,7 @@ export function validated(issueDate: string): SundayIssue {
 }
 
 export function commandValidate(issueDate: string): void {
-  const issue = validated(issueDate);
+  const issue = validated(issueDate, MIN_DRAFT_ITEMS);
   console.log(`issue ${issue.number} (${issue.slug}) follows the rules`);
 }
 
@@ -65,9 +66,11 @@ function combined(checker: readonly ItemVerdict[], dead: readonly ItemVerdict[])
 
 export async function commandCheck(issueDate: string): Promise<void> {
   const paths = statePaths(issueDate);
-  const issue = validated(issueDate);
+  const issue = validated(issueDate, MIN_DRAFT_ITEMS);
   const dead = await deadLinks(issue);
-  const verdicts = combined(parseVerdicts(replyJson(runChecker(issue, readCandidates(paths.candidates))), issue), dead);
+  const check = parseVerdicts(replyJson(runChecker(issue, readCandidates(paths.candidates))), issue);
+  const verdicts = combined(check.verdicts, dead);
+  console.log(`${check.editorNote.verdict} the editor's note: ${check.editorNote.reason}`);
   for (const verdict of verdicts) console.log(`${verdict.verdict} ${verdict.sourceUrl}: ${verdict.reason}`);
   if (confirmsNothing(verdicts)) {
     const empty: CheckRecord = { issueDate, issueHash: sha256(readFileSync(paths.issueFile, 'utf8')), checkedAt: new Date().toISOString(), verdicts };
@@ -76,10 +79,11 @@ export async function commandCheck(issueDate: string): Promise<void> {
     console.log(`the check confirmed no item, so there is no issue for ${issueDate}`);
     return;
   }
+  if (check.editorNote.verdict === 'rejected') throw new Error(`the check rejected the editor's note: ${check.editorNote.reason}`);
   const checked = applyVerdicts(issue, verdicts);
   const content = `${JSON.stringify(checked.issue, null, 2)}\n`;
   writeFileSync(paths.issueFile, content);
-  validated(issueDate);
+  validated(issueDate, MIN_CHECKED_ITEMS);
   const record: CheckRecord = { issueDate, issueHash: sha256(content), checkedAt: new Date().toISOString(), verdicts };
   writeFileSync(paths.checked, content);
   writeJson(paths.check, record);
@@ -103,7 +107,7 @@ export function commandOpenPull(issueDate: string): void {
   const content = readFileSync(paths.checked, 'utf8');
   const record = checkedContent(issueDate, content);
   writeFileSync(paths.issueFile, content);
-  const issue = validated(issueDate);
+  const issue = validated(issueDate, MIN_CHECKED_ITEMS);
   run('npm', ['run', 'build'], BUILD_TIMEOUT_MS);
   const branch = issueBranch(issueDate);
   if (remoteBranchSha(branch) !== null) git(['push', '-q', 'origin', '--delete', branch]);

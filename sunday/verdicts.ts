@@ -1,5 +1,5 @@
 import { hasExactKeys, hasStrings, isRecord } from '../src/lib/guards.ts';
-import type { ItemVerdict } from './types.ts';
+import type { CheckReply, ItemVerdict, NoteVerdict } from './types.ts';
 import type { SundayIssue } from '../src/types/sunday.ts';
 
 export interface CheckedIssue {
@@ -8,7 +8,8 @@ export interface CheckedIssue {
 }
 
 const VERDICT_KEYS: readonly string[] = ['sourceUrl', 'verdict', 'reason'];
-const FILE_KEYS: readonly string[] = ['issueDate', 'verdicts'];
+const NOTE_KEYS: readonly string[] = ['verdict', 'reason'];
+const FILE_KEYS: readonly string[] = ['issueDate', 'editorNote', 'verdicts'];
 
 function isVerdict(value: unknown): value is ItemVerdict {
   return (
@@ -19,14 +20,23 @@ function isVerdict(value: unknown): value is ItemVerdict {
   );
 }
 
+function isNoteVerdict(value: unknown): value is NoteVerdict {
+  return (
+    isRecord(value) &&
+    hasExactKeys(value, NOTE_KEYS) &&
+    hasStrings(value, NOTE_KEYS) &&
+    (value.verdict === 'confirmed' || value.verdict === 'rejected')
+  );
+}
+
 export function itemUrls(issue: SundayIssue): readonly string[] {
   return issue.sections.flatMap((section) => section.items.map((item) => item.sourceUrl));
 }
 
-export function parseVerdicts(json: string, issue: SundayIssue): readonly ItemVerdict[] {
+export function parseVerdicts(json: string, issue: SundayIssue): CheckReply {
   const value: unknown = JSON.parse(json);
-  if (!isRecord(value) || !hasExactKeys(value, FILE_KEYS) || !Array.isArray(value.verdicts) || !value.verdicts.every(isVerdict)) {
-    throw new Error('the check must answer { issueDate, verdicts: [{ sourceUrl, verdict, reason }] }');
+  if (!isRecord(value) || !hasExactKeys(value, FILE_KEYS) || !isNoteVerdict(value.editorNote) || !Array.isArray(value.verdicts) || !value.verdicts.every(isVerdict)) {
+    throw new Error('the check must answer { issueDate, editorNote: { verdict, reason }, verdicts: [{ sourceUrl, verdict, reason }] }');
   }
   if (value.issueDate !== issue.slug) throw new Error(`the check answered for ${String(value.issueDate)}, not ${issue.slug}`);
   const verdicts: readonly ItemVerdict[] = value.verdicts;
@@ -38,7 +48,7 @@ export function parseVerdicts(json: string, issue: SundayIssue): readonly ItemVe
   if (duplicates.length > 0) throw new Error(`the check answered twice for ${duplicates.join(', ')}`);
   if (missing.length > 0) throw new Error(`the check gave no verdict for ${missing.join(', ')}`);
   if (extra.length > 0) throw new Error(`the check answered for items the issue doesn't have: ${extra.join(', ')}`);
-  return verdicts;
+  return { editorNote: value.editorNote, verdicts };
 }
 
 export function confirmsNothing(verdicts: readonly ItemVerdict[]): boolean {

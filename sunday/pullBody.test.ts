@@ -23,11 +23,18 @@ describe('pullBody', () => {
       {
         page: 'src/data/sunday/2026-11-15.json',
         facts: [
-          { part: 'text', claim: 'A final-round charge: Smith shot 63 to win by two. It was his first title.', source: 'https://www.bbc.co.uk/sport/golf/1' },
-          { part: 'text', claim: 'Worlds move: The PDGA set new dates for Pro Worlds.', source: 'https://www.pdga.com/news/1' },
+          ...ISSUE_TWO.sections.map((section) => {
+            const item = section.items[0];
+            if (item === undefined) throw new Error('fixture item missing');
+            return { part: 'text', claim: `${item.headline}: ${item.body} ${item.whyItMatters ?? ''}`, source: item.sourceUrl };
+          }),
         ],
       },
     ]);
+  });
+
+  it('shows the editor\'s note the owner approves', () => {
+    expect(pullBody(ISSUE_TWO, record)).toContain(`## Editor's note\n${ISSUE_TWO.editorNote ?? ''}`);
   });
 
   it('says the issue goes live only once the owner approves it', () => {

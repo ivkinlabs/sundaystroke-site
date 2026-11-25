@@ -1,38 +1,83 @@
 import { hasStrings, isRecord } from './guards.ts';
-import type { SundayIssue, SundayItem, SundaySection, SundaySectionKey } from '../types/sunday.ts';
+import type { Fields } from './guards.ts';
+import type { SundayIssue, SundayItem, SundayPreview, SundaySection, SundaySectionKey } from '../types/sunday.ts';
 
 export const SUNDAY_SECTION_HEADINGS: Readonly<Record<SundaySectionKey, string>> = {
   golf: 'Golf',
   tracer: 'Disc golf',
 };
 
-function isItem(value: unknown): value is SundayItem {
-  return isRecord(value) && hasStrings(value, ['headline', 'body', 'sourceLabel', 'sourceUrl']);
+export const SUNDAY_SECTION_ANCHORS: Readonly<Record<SundaySectionKey, string>> = {
+  golf: 'golf',
+  tracer: 'disc-golf',
+};
+
+const ITEM_STRINGS: readonly string[] = ['headline', 'body', 'sourceLabel', 'sourceUrl'];
+const ISSUE_STRINGS: readonly string[] = ['slug', 'date', 'title', 'pageTitle', 'summary'];
+const PREVIEW_STRINGS: readonly string[] = ['title', 'siteName', 'description'];
+
+function fail(label: string, reason: string): never {
+  throw new Error(`${label} is not a Sunday issue: ${reason}`);
 }
 
-function isSection(value: unknown): value is SundaySection {
-  return (
-    isRecord(value) &&
-    (value.key === 'golf' || value.key === 'tracer') &&
-    Array.isArray(value.items) &&
-    value.items.every(isItem)
-  );
+function textOrNull(fields: Fields, key: string, label: string): string | null {
+  const value = fields[key];
+  if (value === undefined || value === null) return null;
+  if (typeof value !== 'string') fail(label, `${key} must be text or null`);
+  return value;
 }
 
-export function isSundayIssue(value: unknown): value is SundayIssue {
-  return (
-    isRecord(value) &&
-    hasStrings(value, ['slug', 'date', 'title', 'pageTitle', 'summary']) &&
-    typeof value.number === 'number' &&
-    Array.isArray(value.sections) &&
-    value.sections.every(isSection)
-  );
+function readPreview(value: unknown, label: string): SundayPreview | null {
+  if (value === undefined || value === null) return null;
+  if (!isRecord(value) || !hasStrings(value, PREVIEW_STRINGS)) fail(label, 'a preview needs title, siteName and description');
+  return {
+    title: String(value.title),
+    siteName: String(value.siteName),
+    description: String(value.description),
+    image: textOrNull(value, 'image', label),
+  };
+}
+
+function readItem(value: unknown, label: string): SundayItem {
+  if (!isRecord(value) || !hasStrings(value, ITEM_STRINGS)) fail(label, `each item needs ${ITEM_STRINGS.join(', ')}`);
+  return {
+    headline: String(value.headline),
+    body: String(value.body),
+    whyItMatters: textOrNull(value, 'whyItMatters', label),
+    sourceLabel: String(value.sourceLabel),
+    sourceUrl: String(value.sourceUrl),
+    published: textOrNull(value, 'published', label),
+    preview: readPreview(value.preview, label),
+  };
+}
+
+function readSection(value: unknown, label: string): SundaySection {
+  if (!isRecord(value) || (value.key !== 'golf' && value.key !== 'tracer') || !Array.isArray(value.items)) {
+    fail(label, 'each section needs a golf or tracer key and items');
+  }
+  const items: readonly unknown[] = value.items;
+  return { key: value.key, items: items.map((item) => readItem(item, label)) };
+}
+
+export function readIssue(value: unknown, label: string): SundayIssue {
+  if (!isRecord(value) || !hasStrings(value, ISSUE_STRINGS) || typeof value.number !== 'number' || !Array.isArray(value.sections)) {
+    fail(label, `the issue needs ${ISSUE_STRINGS.join(', ')}, a number and sections`);
+  }
+  const sections: readonly unknown[] = value.sections;
+  return {
+    slug: String(value.slug),
+    number: value.number,
+    date: String(value.date),
+    title: String(value.title),
+    pageTitle: String(value.pageTitle),
+    summary: String(value.summary),
+    editorNote: textOrNull(value, 'editorNote', label),
+    sections: sections.map((section) => readSection(section, label)),
+  };
 }
 
 export function parseIssue(json: string, label: string): SundayIssue {
-  const value: unknown = JSON.parse(json);
-  if (!isSundayIssue(value)) throw new Error(`${label} is not a Sunday issue`);
-  return value;
+  return readIssue(JSON.parse(json), label);
 }
 
 export function sortedIssues(issues: readonly SundayIssue[]): readonly SundayIssue[] {

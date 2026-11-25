@@ -39,6 +39,16 @@ export interface ItemVerdict {
   reason: string;
 }
 
+export interface NoteVerdict {
+  verdict: VerdictKind;
+  reason: string;
+}
+
+export interface CheckReply {
+  editorNote: NoteVerdict;
+  verdicts: readonly ItemVerdict[];
+}
+
 export interface CheckRecord {
   issueDate: string;
   issueHash: string;

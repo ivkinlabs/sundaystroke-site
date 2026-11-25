@@ -6,13 +6,16 @@ import { applyVerdicts, confirmsNothing, parseVerdicts } from './verdicts.ts';
 const GOLF = 'https://www.bbc.co.uk/sport/golf/1';
 const DISC = 'https://www.pdga.com/news/1';
 
-const reply = (verdicts: readonly ItemVerdict[], issueDate: string = '2026-11-15'): string => JSON.stringify({ issueDate, verdicts });
+const NOTE = { verdict: 'confirmed', reason: 'every fact is on a kept page' };
+const reply = (verdicts: readonly ItemVerdict[], issueDate: string = '2026-11-15'): string => JSON.stringify({ issueDate, editorNote: NOTE, verdicts });
 const confirmed = (sourceUrl: string): ItemVerdict => ({ sourceUrl, verdict: 'confirmed', reason: 'matches the page' });
 const rejected = (sourceUrl: string): ItemVerdict => ({ sourceUrl, verdict: 'rejected', reason: 'the source says 2028' });
 
 describe('parseVerdicts', () => {
   it('accepts one verdict for every item', () => {
-    expect(parseVerdicts(reply([confirmed(GOLF), rejected(DISC)]), ISSUE_TWO)).toHaveLength(2);
+    const check = parseVerdicts(reply([confirmed(GOLF), rejected(DISC)]), ISSUE_TWO);
+    expect(check.verdicts).toHaveLength(2);
+    expect(check.editorNote).toEqual(NOTE);
   });
 
   it('refuses a check that skipped an item', () => {
@@ -28,9 +31,14 @@ describe('parseVerdicts', () => {
     expect(() => parseVerdicts(reply([confirmed(GOLF), confirmed(DISC)], '2026-11-08'), ISSUE_TWO)).toThrow(/2026-11-08/);
   });
 
+  it('refuses a check that gave no verdict on the editor\'s note', () => {
+    expect(() => parseVerdicts(JSON.stringify({ issueDate: '2026-11-15', verdicts: [confirmed(GOLF), confirmed(DISC)] }), ISSUE_TWO)).toThrow(/editorNote/);
+    expect(() => parseVerdicts(JSON.stringify({ issueDate: '2026-11-15', editorNote: { verdict: 'maybe', reason: 'x' }, verdicts: [confirmed(GOLF), confirmed(DISC)] }), ISSUE_TWO)).toThrow(/editorNote/);
+  });
+
   it('refuses unknown verdicts and extra fields', () => {
-    expect(() => parseVerdicts(JSON.stringify({ issueDate: '2026-11-15', verdicts: [{ ...confirmed(GOLF), verdict: 'maybe' }, confirmed(DISC)] }), ISSUE_TWO)).toThrow();
-    expect(() => parseVerdicts(JSON.stringify({ issueDate: '2026-11-15', verdicts: [{ ...confirmed(GOLF), note: 'x' }, confirmed(DISC)] }), ISSUE_TWO)).toThrow();
+    expect(() => parseVerdicts(JSON.stringify({ issueDate: '2026-11-15', editorNote: NOTE, verdicts: [{ ...confirmed(GOLF), verdict: 'maybe' }, confirmed(DISC)] }), ISSUE_TWO)).toThrow();
+    expect(() => parseVerdicts(JSON.stringify({ issueDate: '2026-11-15', editorNote: NOTE, verdicts: [{ ...confirmed(GOLF), note: 'x' }, confirmed(DISC)] }), ISSUE_TWO)).toThrow();
   });
 });
 

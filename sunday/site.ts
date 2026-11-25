@@ -38,3 +38,12 @@ export async function fetchText(url: string): Promise<string> {
   if (!response.ok) throw new Error(`${url} answered ${response.status}`);
   return response.text();
 }
+
+export async function pageTextOrNull(url: string): Promise<string | null> {
+  const response = await retried(url);
+  if (!response.ok) {
+    await response.body?.cancel();
+    return null;
+  }
+  return response.text();
+}
