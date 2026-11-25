@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { issueProblems, retiredFieldProblems, sentenceCount } from './rules.ts';
+import { issueFileProblems, issueProblems, sentenceCount, shapeProblems } from './rules.ts';
 import { ISSUE_TWO, candidatesFor } from './testIssue.ts';
 import type { RuleContext } from './rules.ts';
 import type { CandidateFile } from './types.ts';
@@ -41,7 +41,9 @@ describe('issueProblems', () => {
     expect(issueProblems(story('Smith won. Our Golf GPS app has the yardages.'), context())).toContain('the copy names an app');
     expect(issueProblems({ ...ISSUE_TWO, summary: 'Get it on the App Store.' }, context())).toContain('the copy names an app store');
     expect(issueProblems({ ...ISSUE_TWO, pageTitle: 'Download it free | SundayStroke' }, context())).toContain('the copy asks for a download');
-    expect(issueProblems(story('Smith shot 63 to win by two. It was his first title.'), context())).toEqual([]);
+    expect(issueProblems({ ...ISSUE_TWO, summary: 'Find it on the Play-Store.' }, context())).toContain('the copy names an app store');
+    expect(issueProblems(story('Smith won. Golf-GPS has it.'), context())).toContain('the copy names an app');
+    expect(issueProblems(story('Smith shot 63 to win by two, a happy approach to a title.'), context())).toEqual([]);
   });
 
   it('rejects a story that is not among the stories collected this week', () => {
@@ -97,12 +99,14 @@ describe('every published issue', () => {
     expect(issueProblems(ISSUE_TWO, context(future)).some((problem) => problem.includes('outside the 7 days'))).toBe(true);
   });
 
-  it('fails a new issue that still carries a lead or a section heading', () => {
-    const withLead = { ...ISSUE_TWO, leadText: 'A word from us.', leadClips: [] };
-    expect(retiredFieldProblems(withLead)).toEqual(['the issue has a leadText; new issues leave it out', 'the issue has a leadClips; new issues leave it out']);
+  it('fails a new issue that carries a lead, a section heading or a field of its own', () => {
+    expect(shapeProblems(ISSUE_TWO)).toEqual([]);
+    expect(shapeProblems({ ...ISSUE_TWO, leadText: 'A word from us.', leadClips: [] })).toEqual(['the issue must have exactly the fields slug, number, date, title, pageTitle, summary, sections']);
     const headed = { ...ISSUE_TWO, sections: ISSUE_TWO.sections.map((section) => ({ ...section, heading: 'Golf' })) };
-    expect(retiredFieldProblems(headed)).toEqual(['a section has a heading; new issues leave it out']);
-    expect(retiredFieldProblems(ISSUE_TWO)).toEqual([]);
+    expect(shapeProblems(headed)).toEqual(['each section must have exactly the fields key, items']);
+    const promo = { ...ISSUE_TWO, sections: ISSUE_TWO.sections.map((section) => ({ ...section, items: section.items.map((item) => ({ ...item, storeUrl: 'https://apps.apple.com/app/id1' })) })) };
+    expect(shapeProblems(promo)).toEqual(['each item must have exactly the fields headline, body, sourceLabel, sourceUrl']);
+    expect(issueFileProblems({ ...ISSUE_TWO, leadText: 'x' }, ISSUE_TWO, context()).length).toBe(1);
   });
 
   it('rejects copy that breaks the site\'s copy rules', () => {

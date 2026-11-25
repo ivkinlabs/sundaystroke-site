@@ -69,7 +69,7 @@ function headProblems(page, html, frozen) {
 function newsProblems(page, html) {
   const article = html.match(ARTICLE);
   if (article === null) return [`${page}: no article`];
-  const found = promotionReasons(visibleText(article[1])).map((reason) => `${page}: the article ${reason}`);
+  const found = promotionReasons(visibleText(article[1]).replace(/&nbsp;|&#160;/g, ' ')).map((reason) => `${page}: the article ${reason}`);
   for (const [, href] of article[1].matchAll(/href="([^"]+)"/g)) {
     if (STORE_LINK.test(href)) found.push(`${page}: the article links a store, ${href}`);
   }

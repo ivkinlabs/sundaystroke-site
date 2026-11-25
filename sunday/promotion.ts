@@ -4,8 +4,8 @@ export interface PromotionRule {
 }
 
 export const PROMOTION_RULES: readonly PromotionRule[] = [
-  { pattern: /\b(?:Tracer|Golf\s*GPS|GolfGPS|apps?)\b/i, reason: 'names an app' },
-  { pattern: /\b(?:App\s*Store|Google\s*Play|Play\s*Store)\b/i, reason: 'names an app store' },
+  { pattern: /\b(?:Tracer|Golf[\s-]*GPS|apps?)\b/i, reason: 'names an app' },
+  { pattern: /\b(?:App[\s-]*Store|Google[\s-]*Play|Play[\s-]*Store)\b/i, reason: 'names an app store' },
   { pattern: /\bdownload/i, reason: 'asks for a download' },
 ];
 

@@ -2,7 +2,7 @@ import { addDays, displaySunday, isSunday, madridMidnight } from './calendar.ts'
 import { promotionReasons } from './promotion.ts';
 import { COPY_RULES, DISC_GOLF_WORDS, ITEM_WINDOW_DAYS, MAX_ITEMS } from './sources.ts';
 import type { Candidate, CandidateFile } from './types.ts';
-import { isRecord } from '../src/lib/guards.ts';
+import { hasExactKeys, isRecord } from '../src/lib/guards.ts';
 import { SUNDAY_SECTION_HEADINGS } from '../src/lib/sundayIssue.ts';
 import type { SundayIssue, SundaySection } from '../src/types/sunday.ts';
 
@@ -15,9 +15,10 @@ const ABBREVIATIONS: RegExp = /\b(?:Mr|Mrs|Ms|Dr|St|Jr|Sr|vs|No|U\.S|U\.K|a\.m|p
 const SENTENCE_END: RegExp = /[.!?…]+["”’)]*(?=\s|$)/g;
 const SUMMARY_CHARS: number = 160;
 const TITLE_SUFFIX: string = ' | SundayStroke';
-const SECTION_ORDER: readonly string[] = ['golf', 'tracer'];
-const RETIRED_ISSUE_FIELDS: readonly string[] = ['leadText', 'leadClips'];
-const RETIRED_SECTION_FIELDS: readonly string[] = ['heading'];
+const SECTION_ORDER: readonly string[] = Object.keys(SUNDAY_SECTION_HEADINGS);
+const ISSUE_FIELDS: readonly string[] = ['slug', 'number', 'date', 'title', 'pageTitle', 'summary', 'sections'];
+const SECTION_FIELDS: readonly string[] = ['key', 'items'];
+const ITEM_FIELDS: readonly string[] = ['headline', 'body', 'sourceLabel', 'sourceUrl'];
 const DISC_GOLF_SECTION: string = SUNDAY_SECTION_HEADINGS.tracer;
 
 export function sentenceCount(text: string): number {
@@ -84,13 +85,24 @@ function copyProblems(issue: SundayIssue): string[] {
   return [...broken, ...promoting].map((reason) => `the copy ${reason}`);
 }
 
-export function retiredFieldProblems(value: unknown): readonly string[] {
-  if (!isRecord(value)) return [];
-  const sections = Array.isArray(value.sections) ? value.sections.filter(isRecord) : [];
-  return [
-    ...RETIRED_ISSUE_FIELDS.filter((field) => field in value).map((field) => `the issue has a ${field}; new issues leave it out`),
-    ...RETIRED_SECTION_FIELDS.filter((field) => sections.some((section) => field in section)).map((field) => `a section has a ${field}; new issues leave it out`),
-  ];
+function fieldProblem(value: unknown, fields: readonly string[], label: string): string[] {
+  if (isRecord(value) && hasExactKeys(value, fields)) return [];
+  return [`${label} must have exactly the fields ${fields.join(', ')}`];
+}
+
+export function shapeProblems(value: unknown): readonly string[] {
+  const problems = fieldProblem(value, ISSUE_FIELDS, 'the issue');
+  const sections = isRecord(value) && Array.isArray(value.sections) ? value.sections : [];
+  for (const section of sections) {
+    problems.push(...fieldProblem(section, SECTION_FIELDS, 'each section'));
+    const items = isRecord(section) && Array.isArray(section.items) ? section.items : [];
+    for (const item of items) problems.push(...fieldProblem(item, ITEM_FIELDS, 'each item'));
+  }
+  return [...new Set(problems)];
+}
+
+export function issueFileProblems(json: unknown, issue: SundayIssue, context: RuleContext): readonly string[] {
+  return [...shapeProblems(json), ...issueProblems(issue, context)];
 }
 
 export function issueProblems(issue: SundayIssue, context: RuleContext): readonly string[] {

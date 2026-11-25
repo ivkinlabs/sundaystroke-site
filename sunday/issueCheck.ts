@@ -5,7 +5,7 @@ import { runChecker, replyJson } from './checker.ts';
 import { BUILD_TIMEOUT_MS, git, gh, run } from './exec.ts';
 import { FACTORY_LABEL, fetchMain, issueBranch, openPull, remoteBranchSha } from './github.ts';
 import { pullBody } from './pullBody.ts';
-import { issueProblems, retiredFieldProblems } from './rules.ts';
+import { issueFileProblems } from './rules.ts';
 import { DEAD_LINK_STATUSES, pageStatus } from './site.ts';
 import { SITE_REPO } from './sources.ts';
 import { ISSUES_DIR, readCandidates, readCheckRecord, sha256, statePaths, writeJson } from './state.ts';
@@ -33,13 +33,11 @@ export function validated(issueDate: string): SundayIssue {
   const issues = localIssues();
   const issue = issues.find((candidate) => candidate.slug === issueDate);
   if (issue === undefined) throw new Error(`no issue file ${paths.issueFile}`);
-  const problems = [
-    ...retiredFieldProblems(JSON.parse(readFileSync(paths.issueFile, 'utf8'))),
-    ...issueProblems(issue, {
-      earlierIssues: issues.filter((earlier) => earlier.slug !== issueDate),
-      candidates: readCandidates(paths.candidates),
-    }),
-  ];
+  const json: unknown = JSON.parse(readFileSync(paths.issueFile, 'utf8'));
+  const problems = [...issueFileProblems(json, issue, {
+    earlierIssues: issues.filter((earlier) => earlier.slug !== issueDate),
+    candidates: readCandidates(paths.candidates),
+  })];
   const others = changedFiles().filter((file) => file !== paths.issueFile);
   if (others.length > 0) problems.push(`only ${paths.issueFile} may change; also changed: ${others.join(', ')}`);
   if (problems.length > 0) throw new Error(`issue ${issueDate} breaks the rules:\n- ${problems.join('\n- ')}`);
