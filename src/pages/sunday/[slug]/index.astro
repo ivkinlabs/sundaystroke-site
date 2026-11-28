@@ -2,9 +2,9 @@
 import ArticlePage from '../../../components/ArticlePage.astro';
 import SundayStoryCard from '../../../components/SundayStoryCard.astro';
 import { SUNDAY_ISSUES } from '../../../data/sunday';
-import { SUNDAY_SECTION_ANCHORS, SUNDAY_SECTION_HEADINGS } from '../../../lib/sundayIssue';
+import { SUNDAY_SECTION_HEADINGS } from '../../../lib/sundayIssue';
 import { sitePath } from '../../../utils/paths';
-import type { SundayIssue, SundaySection } from '../../../types/sunday';
+import type { SundayIssue, SundaySection, SundaySectionKey } from '../../../types/sunday';
 import type { GetStaticPaths } from 'astro';
 
 interface Props {
@@ -15,7 +15,8 @@ export const getStaticPaths = (() =>
   SUNDAY_ISSUES.map((issue) => ({ params: { slug: issue.slug }, props: { issue } }))) satisfies GetStaticPaths;
 
 const { issue } = Astro.props;
-const storyAnchor = (section: SundaySection, at: number): string => `${SUNDAY_SECTION_ANCHORS[section.key]}-${at + 1}`;
+const anchor = (key: SundaySectionKey): string => SUNDAY_SECTION_HEADINGS[key].toLowerCase().replaceAll(' ', '-');
+const storyAnchor = (section: SundaySection, at: number): string => `${anchor(section.key)}-${at + 1}`;
 
 ---
 <ArticlePage
@@ -38,7 +39,7 @@ const storyAnchor = (section: SundaySection, at: number): string => `${SUNDAY_SE
     <h2 id="in-this-issue" class="ss-eyebrow">In this issue</h2>
     {issue.sections.map((section) => (
       <div class="mt-4">
-        <a href={`#${SUNDAY_SECTION_ANCHORS[section.key]}`} class="ss-tag text-mist hover:text-ice">{SUNDAY_SECTION_HEADINGS[section.key]}</a>
+        <a href={`#${anchor(section.key)}`} class="ss-tag text-mist hover:text-ice">{SUNDAY_SECTION_HEADINGS[section.key]}</a>
         <ol class="mt-2 flex flex-col gap-2">
           {section.items.map((item, at) => (
             <li><a href={`#${storyAnchor(section, at)}`} class="text-ice hover:text-volt">{item.headline}</a></li>
@@ -49,8 +50,8 @@ const storyAnchor = (section: SundaySection, at: number): string => `${SUNDAY_SE
   </nav>
 
   {issue.sections.map((section) => (
-    <section data-section={section.key} aria-labelledby={SUNDAY_SECTION_ANCHORS[section.key]}>
-      <h2 id={SUNDAY_SECTION_ANCHORS[section.key]} class="scroll-mt-28 border-t border-line pt-10">{SUNDAY_SECTION_HEADINGS[section.key]}</h2>
+    <section data-section={section.key} aria-labelledby={anchor(section.key)}>
+      <h2 id={anchor(section.key)} class="scroll-mt-28 border-t border-line pt-10">{SUNDAY_SECTION_HEADINGS[section.key]}</h2>
       {section.items.map((item, at) => (
         <SundayStoryCard item={item} anchor={storyAnchor(section, at)} />
       ))}

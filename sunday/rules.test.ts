@@ -15,13 +15,14 @@ function context(candidates: CandidateFile = candidatesFor(ISSUE_TWO)): RuleCont
 
 const golfStory = ISSUE_TWO.sections[0]?.items[0];
 if (golfStory === undefined) throw new Error('fixture golf story missing');
-const LONG_BODY: string = golfStory.body;
 
 function withGolf(changes: Partial<SundaySection>): SundayIssue {
   const [golf, tracer] = ISSUE_TWO.sections;
   if (golf === undefined || tracer === undefined) throw new Error('fixture sections missing');
   return { ...ISSUE_TWO, sections: [{ ...golf, ...changes }, tracer] };
 }
+
+const storyProblems = (changes: Partial<typeof golfStory>): readonly string[] => issueProblems(withGolf({ items: [{ ...golfStory, ...changes }] }), context());
 
 describe('issueProblems', () => {
   it('accepts an issue that follows the rules', () => {
@@ -34,19 +35,19 @@ describe('issueProblems', () => {
   });
 
   it('rejects disc golf in the Golf section or the summary', () => {
-    const golfItem = { ...golfStory, body: `${LONG_BODY} A disc golf story.` };
+    const golfItem = { ...golfStory, body: `${golfStory.body} A disc golf story.` };
     expect(issueProblems(withGolf({ items: [golfItem] }), context())).toContain('disc golf is named in the Golf section');
     expect(issueProblems({ ...ISSUE_TWO, summary: 'Disc golf this week.' }, context())).toContain('disc golf is named outside the Disc golf section');
   });
 
   it('fails an issue that names an app, a store or a download', () => {
-    const story = (extra: string): SundayIssue => withGolf({ items: [{ ...golfStory, body: `${LONG_BODY} ${extra}` }] });
+    const story = (extra: string): SundayIssue => withGolf({ items: [{ ...golfStory, body: `${golfStory.body} ${extra}` }] });
     expect(issueProblems(story('Smith won. Film your own swing with Tracer.'), context())).toContain('the copy names an app');
     expect(issueProblems(story('Smith won. Our Golf GPS app has the yardages.'), context())).toContain('the copy names an app');
     expect(issueProblems({ ...ISSUE_TWO, editorNote: `${ISSUE_TWO.editorNote ?? ''} Get the app.` }, context())).toContain('the copy names an app');
-    expect(issueProblems(withGolf({ items: [{ ...golfStory, whyItMatters: 'Download it and try the drill yourself.' }] }), context())).toContain('the copy asks for a download');
+    expect(storyProblems({ whyItMatters: 'Download it and try the drill yourself.' })).toContain('the copy asks for a download');
     const promotedPreview = { title: 'Get the ESPN app', siteName: 'ESPN', description: '', image: null };
-    expect(issueProblems(withGolf({ items: [{ ...golfStory, preview: promotedPreview }] }), context())).toContain('the copy names an app');
+    expect(storyProblems({ preview: promotedPreview })).toContain('the copy names an app');
     expect(issueProblems({ ...ISSUE_TWO, summary: 'Get it on the App Store.' }, context())).toContain('the copy names an app store');
     expect(issueProblems({ ...ISSUE_TWO, pageTitle: 'Download it free | SundayStroke' }, context())).toContain('the copy asks for a download');
     expect(issueProblems({ ...ISSUE_TWO, summary: 'Find it on the Play-Store.' }, context())).toContain('the copy names an app store');
@@ -68,13 +69,13 @@ describe('issueProblems', () => {
   });
 
   it('holds each write-up to 60 to 150 words and one line on why it matters', () => {
-    const short = issueProblems(withGolf({ items: [{ ...golfStory, body: 'Smith won by two.' }] }), context()).join('\n');
+    const short = storyProblems({ body: 'Smith won by two.' }).join('\n');
     expect(short).toContain('"A final-round charge" has 4 words; 60 to 150 allowed');
-    const long = issueProblems(withGolf({ items: [{ ...golfStory, body: `${LONG_BODY} ${LONG_BODY} ${LONG_BODY}` }] }), context()).join('\n');
+    const long = storyProblems({ body: `${golfStory.body} ${golfStory.body} ${golfStory.body}` }).join('\n');
     expect(long).toContain('words; 60 to 150 allowed');
-    const twoLines = issueProblems(withGolf({ items: [{ ...golfStory, whyItMatters: 'Play your own game. Ignore the board.' }] }), context()).join('\n');
+    const twoLines = storyProblems({ whyItMatters: 'Play your own game. Ignore the board.' }).join('\n');
     expect(twoLines).toContain('says why it matters in 2 sentences; one allowed');
-    expect(issueProblems(withGolf({ items: [{ ...golfStory, whyItMatters: null }] }), context())).toContain('"A final-round charge" has no line on why it matters');
+    expect(storyProblems({ whyItMatters: null })).toContain('"A final-round charge" has no line on why it matters');
   });
 
   it('holds the editor\'s note to 60 to 120 words of our own', () => {
@@ -87,14 +88,14 @@ describe('issueProblems', () => {
     const copiedFrom = { ...candidates, candidates: candidates.candidates.map((candidate, at) => (at === 0 ? { ...candidate, excerpt: 'He made seven birdies and no bogeys on the way to a 63.' } : candidate)) };
     expect(issueProblems(ISSUE_TWO, context(copiedFrom)).join()).toContain('copies its source word for word: "he made seven birdies and no bogeys on"');
     const fromPreview = { title: 'Smith wins', siteName: 'BBC Sport', description: 'It was the first title of his career after four years of near misses.', image: null };
-    expect(issueProblems(withGolf({ items: [{ ...golfStory, preview: fromPreview }] }), context()).join()).toContain('copies its source word for word');
+    expect(storyProblems({ preview: fromPreview }).join()).toContain('copies its source word for word');
   });
 
   it('dates each story from its source and wants an https preview image', () => {
-    expect(issueProblems(withGolf({ items: [{ ...golfStory, published: '2026-11-10' }] }), context())).toContain('"A final-round charge" must carry its source\'s date, 2026-11-13');
+    expect(storyProblems({ published: '2026-11-10' })).toContain('"A final-round charge" must carry its source\'s date, 2026-11-13');
     const preview = { title: 'Smith wins', siteName: 'BBC Sport', description: '', image: 'http://example.com/a.jpg' };
-    expect(issueProblems(withGolf({ items: [{ ...golfStory, preview }] }), context())).toContain('"A final-round charge" has a preview image that is not an https link');
-    expect(issueProblems(withGolf({ items: [{ ...golfStory, preview: { ...preview, image: null } }] }), context())).toContain('"A final-round charge" carries a preview; only code fills previews');
+    expect(storyProblems({ preview })).toContain('"A final-round charge" has a preview code would not fill');
+    expect(storyProblems({ preview: { ...preview, image: 'https://me:pw@example.com/a.jpg' } })).toHaveLength(1);
   });
 
   it('rejects more than five items and a repeated source', () => {

@@ -39,10 +39,7 @@ export interface ItemVerdict {
   reason: string;
 }
 
-export interface NoteVerdict {
-  verdict: VerdictKind;
-  reason: string;
-}
+export type NoteVerdict = Omit<ItemVerdict, 'sourceUrl'>;
 
 export interface CheckReply {
   editorNote: NoteVerdict;

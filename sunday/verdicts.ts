@@ -21,12 +21,7 @@ function isVerdict(value: unknown): value is ItemVerdict {
 }
 
 function isNoteVerdict(value: unknown): value is NoteVerdict {
-  return (
-    isRecord(value) &&
-    hasExactKeys(value, NOTE_KEYS) &&
-    hasStrings(value, NOTE_KEYS) &&
-    (value.verdict === 'confirmed' || value.verdict === 'rejected')
-  );
+  return isRecord(value) && hasExactKeys(value, NOTE_KEYS) && hasStrings(value, NOTE_KEYS) && (value.verdict === 'confirmed' || value.verdict === 'rejected');
 }
 
 export function itemUrls(issue: SundayIssue): readonly string[] {
@@ -65,7 +60,7 @@ export function withoutItems(issue: SundayIssue, verdicts: readonly ItemVerdict[
 
 export function applyVerdicts(issue: SundayIssue, verdicts: readonly ItemVerdict[]): CheckedIssue {
   const rejected = verdicts.filter((verdict) => verdict.verdict === 'rejected');
-  const checked = withoutItems(issue, rejected);
-  if (checked.sections.length === 0) throw new Error('the check confirmed no item, so there is no issue this week');
-  return { issue: checked, rejected };
+  const { sections } = withoutItems(issue, rejected);
+  if (sections.length === 0) throw new Error('the check confirmed no item, so there is no issue this week');
+  return { issue: { ...issue, sections }, rejected };
 }

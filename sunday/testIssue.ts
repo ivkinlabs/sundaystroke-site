@@ -23,7 +23,7 @@ export const ISSUE_TWO: SundayIssue = {
   pageTitle: 'A Final-Round Charge | SundayStroke',
   summary: 'A final-round charge and a putting habit.',
   editorNote:
-    'This was a week for patience. Smith spent three days a few shots back and then went low when it counted, closing with a 63 that nobody near the top could answer. It was his first title, and it came from waiting for the right holes rather than forcing birdies early. The calendar also moved for next year, which matters to anyone planning a trip. Read on for both, and for the full stories behind them.',
+    'This was a week for patience. Smith spent three days a few shots back and then went low when it counted, closing with a 63 that nobody near the top could answer. It was his first title, and it came from waiting for the right holes rather than forcing birdies early. The calendar also moved for next year, which matters to anyone planning a trip.',
   sections: [
     {
       key: 'golf',
@@ -35,7 +35,7 @@ export const ISSUE_TWO: SundayIssue = {
           sourceLabel: 'BBC Sport',
           sourceUrl: 'https://www.bbc.co.uk/sport/golf/1',
           published: '2026-11-13',
-          preview: null,
+          preview: { title: 'Smith charges to first title', siteName: 'BBC Sport', description: 'A closing 63 settles it.', image: 'https://ichef.bbci.co.uk/news/1.jpg' },
         },
       ],
     },

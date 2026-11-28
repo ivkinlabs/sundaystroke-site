@@ -6,7 +6,7 @@ import type { WordRange } from './sources.ts';
 import type { Candidate, CandidateFile } from './types.ts';
 import { hasExactKeys, isRecord } from '../src/lib/guards.ts';
 import { SUNDAY_SECTION_HEADINGS } from '../src/lib/sundayIssue.ts';
-import type { SundayIssue, SundayItem, SundaySection } from '../src/types/sunday.ts';
+import type { SundayIssue, SundayItem, SundayPreview, SundaySection } from '../src/types/sunday.ts';
 
 export interface RuleContext {
   earlierIssues: readonly SundayIssue[];
@@ -22,8 +22,18 @@ const ISSUE_FIELDS: readonly string[] = ['slug', 'number', 'date', 'title', 'pag
 const SECTION_FIELDS: readonly string[] = ['key', 'items'];
 const ITEM_FIELDS: readonly string[] = ['headline', 'body', 'whyItMatters', 'sourceLabel', 'sourceUrl', 'published', 'preview'];
 const PREVIEW_FIELDS: readonly string[] = ['title', 'siteName', 'description', 'image'];
-const HTTPS: RegExp = /^https:\/\//;
 const DISC_GOLF_SECTION: string = SUNDAY_SECTION_HEADINGS.tracer;
+
+export function cleanHttps(value: string, base?: string): string | null {
+  const url = value === '' ? null : URL.parse(value, base);
+  return url?.protocol === 'https:' && url.username === '' && url.password === '' ? url.href : null;
+}
+
+export function previewShown(preview: SundayPreview): boolean {
+  const text = [preview.title, preview.siteName, preview.description].join(' ');
+  const clean = promotionReasons(text).length === 0 && !COPY_RULES.some((rule) => rule.pattern.test(text));
+  return preview.title !== '' && clean && (preview.image === null || cleanHttps(preview.image) !== null);
+}
 
 export function sentenceCount(text: string): number {
   return (text.replace(ABBREVIATIONS, 'ABBR').trim().match(SENTENCE_END) ?? []).length;
@@ -87,8 +97,7 @@ function itemProblems(section: SundaySection, byUrl: ReadonlyMap<string, Candida
       if (sentences !== 1) problems.push(`${label} says why it matters in ${sentences} sentences; one allowed`);
       problems.push(...wordProblem(item.whyItMatters, WHY_WORDS, `${label}'s line on why it matters`));
     }
-    if (item.preview !== null) problems.push(`${label} carries a preview; only code fills previews`);
-    if (item.preview !== null && !(item.preview.image === null || HTTPS.test(item.preview.image))) problems.push(`${label} has a preview image that is not an https link`);
+    if (item.preview !== null && !previewShown(item.preview)) problems.push(`${label} has a preview code would not fill`);
     if (seen.has(item.sourceUrl)) problems.push(`${label} repeats a source`);
     seen.add(item.sourceUrl);
     const candidate = byUrl.get(item.sourceUrl);

@@ -3,6 +3,7 @@ import { commandFind } from './collect.ts';
 import { commandDone, commandPlan } from './facts.ts';
 import { issuesOnMain, fetchMain } from './github.ts';
 import { commandCheck, commandOpenPull, commandValidate } from './issueCheck.ts';
+import { commandPreview } from './previews.ts';
 import { REPORT_MARKER, withLock, writeJson } from './state.ts';
 
 type Command = (args: readonly string[]) => void | Promise<void>;
@@ -27,6 +28,7 @@ const COMMANDS: Readonly<Record<string, Command>> = {
   plan: commandPlan,
   done: commandDone,
   find: locked(commandFind),
+  preview: locked(commandPreview),
   validate: (args) => commandValidate(dateArgument(args)),
   check: locked(commandCheck),
   'open-pr': locked(commandOpenPull),

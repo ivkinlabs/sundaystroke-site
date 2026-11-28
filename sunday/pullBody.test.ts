@@ -23,11 +23,7 @@ describe('pullBody', () => {
       {
         page: 'src/data/sunday/2026-11-15.json',
         facts: [
-          ...ISSUE_TWO.sections.map((section) => {
-            const item = section.items[0];
-            if (item === undefined) throw new Error('fixture item missing');
-            return { part: 'text', claim: `${item.headline}: ${item.body} ${item.whyItMatters ?? ''}`, source: item.sourceUrl };
-          }),
+          ...ISSUE_TWO.sections.flatMap((section) => section.items.map((item) => ({ part: 'text', claim: `${item.headline}: ${item.body} ${item.whyItMatters ?? ''}`, source: item.sourceUrl }))),
         ],
       },
     ]);
