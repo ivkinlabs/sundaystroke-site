@@ -7,7 +7,7 @@ const GOLF = 'https://www.bbc.co.uk/sport/golf/1';
 const DISC = 'https://www.pdga.com/news/1';
 
 const NOTE = { verdict: 'confirmed', reason: 'every fact is on a kept page' };
-const reply = (verdicts: readonly Record<string, unknown>[], issueDate: string = '2026-11-15', editorNote: unknown = NOTE): string => JSON.stringify({ issueDate, editorNote, verdicts });
+const reply = (verdicts: readonly unknown[], issueDate: string = '2026-11-15', editorNote: unknown = NOTE): string => JSON.stringify({ issueDate, editorNote, verdicts });
 const confirmed = (sourceUrl: string): ItemVerdict => ({ sourceUrl, verdict: 'confirmed', reason: 'matches the page' });
 const rejected = (sourceUrl: string): ItemVerdict => ({ sourceUrl, verdict: 'rejected', reason: 'the source says 2028' });
 
