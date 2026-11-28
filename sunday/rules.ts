@@ -11,7 +11,6 @@ import type { SundayIssue, SundayItem, SundaySection } from '../src/types/sunday
 export interface RuleContext {
   earlierIssues: readonly SundayIssue[];
   candidates: CandidateFile;
-  minItems: number;
 }
 
 const ABBREVIATIONS: RegExp = /\b(?:Mr|Mrs|Ms|Dr|St|Jr|Sr|vs|No|U\.S|U\.K|a\.m|p\.m|Jan|Feb|Mar|Apr|Jun|Jul|Aug|Sep|Sept|Oct|Nov|Dec|[A-Z])\./g;
@@ -147,7 +146,7 @@ export function issueProblems(issue: SundayIssue, context: RuleContext): readonl
   const ordered = SECTION_ORDER.filter((key) => keys.some((present) => present === key));
   if (new Set(keys).size !== keys.length || keys.join() !== ordered.join()) problems.push(`sections must be Golf, then ${DISC_GOLF_SECTION}, each at most once`);
   const total = issue.sections.reduce((sum, section) => sum + section.items.length, 0);
-  if (total < context.minItems || total > MAX_ITEMS) problems.push(`${total} items; ${context.minItems} to ${MAX_ITEMS} allowed`);
+  if (total < 1 || total > MAX_ITEMS) problems.push(`${total} items; 1 to ${MAX_ITEMS} allowed`);
   const byUrl = new Map(context.candidates.candidates.map((candidate) => [candidate.link, candidate]));
   const seen = new Set<string>();
   const window = isSunday(issue.slug) ? itemWindow(issue.slug) : { from: new Date(0), to: new Date(0) };

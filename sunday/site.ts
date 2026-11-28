@@ -38,21 +38,3 @@ export async function fetchText(url: string): Promise<string> {
   if (!response.ok) throw new Error(`${url} answered ${response.status}`);
   return response.text();
 }
-
-export interface FetchedPage {
-  html: string;
-  url: string;
-}
-
-export async function sourcePage(url: string): Promise<FetchedPage | null> {
-  const response = await retried(url);
-  if (response.status === 429 || response.status >= 500) {
-    await response.body?.cancel();
-    throw new Error(`${url} answered ${response.status}; run the step again later`);
-  }
-  if (!response.ok) {
-    await response.body?.cancel();
-    return null;
-  }
-  return { html: await response.text(), url: response.url === '' ? url : response.url };
-}
