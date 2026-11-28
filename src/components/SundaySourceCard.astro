@@ -9,10 +9,8 @@ const { item } = Astro.props;
 ---
 <a
   href={item.sourceUrl}
-  class="not-prose mt-5 flex flex-col gap-1.5 rounded-xl border border-line bg-raised p-4 text-ice no-underline transition-colors hover:border-volt focus-visible:border-volt"
-  data-source-card="text"
+  class="not-prose mt-5 flex items-center justify-between gap-3 rounded-xl border border-line bg-raised p-4 font-semibold leading-snug text-ice no-underline transition-colors hover:border-volt focus-visible:border-volt"
 >
-  <span class="ss-tag text-mist">{item.sourceLabel}</span>
-  <span class="font-semibold leading-snug">Read the full story at {item.sourceLabel}</span>
-  <span class="text-sm text-volt">Read the original story <span aria-hidden="true">→</span></span>
+  <span>Read the full story at {item.sourceLabel}</span>
+  <span class="text-volt" aria-hidden="true">→</span>
 </a>

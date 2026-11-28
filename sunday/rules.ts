@@ -119,9 +119,7 @@ export function shapeProblems(value: unknown): readonly string[] {
   for (const section of sections) {
     problems.push(...fieldProblem(section, SECTION_FIELDS, 'each section'));
     const items = isRecord(section) && Array.isArray(section.items) ? section.items : [];
-    for (const item of items) {
-      problems.push(...fieldProblem(item, ITEM_FIELDS, 'each item'));
-    }
+    for (const item of items) problems.push(...fieldProblem(item, ITEM_FIELDS, 'each item'));
   }
   return [...new Set(problems)];
 }
