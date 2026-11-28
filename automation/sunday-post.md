@@ -23,7 +23,7 @@ The model is a golf newsletter people read for its own sake: a 3 to 5 minute rea
 2. Choose 3 to 5 stories a club golfer would care about this week (results, rule or tour news, a practical playing idea). A thin week gets fewer stories, down to one; never pad it. Skip live blogs, betting, gear deals and listicles.
 3. Open each chosen story's page and read it before you write about it. Every name, number and date must be on that page; never copy a sentence, never quote more than a few words, never use the source's photos. In your own words:
    - `headline`: short and plain.
-   - `body`: 60 to 150 words on what happened, enough that a golfer could retell it; `validate` refuses eight words in a row taken from the feed excerpt.
+   - `body`: 60 to 150 words on what happened, enough that a golfer could retell it; `validate` refuses eight words in a row taken from the story's title or feed excerpt.
    - `whyItMatters`: one sentence of 6 to 35 words on why it matters to a club golfer.
    - Last, the issue's `editorNote`: 60 to 120 words in our own voice on what the week in golf was about, drawn only from the chosen stories' pages, with no disc golf.
 4. The issue is news, not an advert. It has no lead clip and no store link, and it never names an app (ours or anyone else's), an app store or a download.

@@ -94,6 +94,7 @@ describe('issueProblems', () => {
     expect(issueProblems(withGolf({ items: [{ ...golfStory, published: '2026-11-10' }] }), context())).toContain('"A final-round charge" must carry its source\'s date, 2026-11-13');
     const preview = { title: 'Smith wins', siteName: 'BBC Sport', description: '', image: 'http://example.com/a.jpg' };
     expect(issueProblems(withGolf({ items: [{ ...golfStory, preview }] }), context())).toContain('"A final-round charge" has a preview image that is not an https link');
+    expect(issueProblems(withGolf({ items: [{ ...golfStory, preview: { ...preview, image: null } }] }), context())).toContain('"A final-round charge" carries a preview; only code fills previews');
   });
 
   it('rejects more than five items and a repeated source', () => {

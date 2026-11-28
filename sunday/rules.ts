@@ -87,6 +87,7 @@ function itemProblems(section: SundaySection, byUrl: ReadonlyMap<string, Candida
       if (sentences !== 1) problems.push(`${label} says why it matters in ${sentences} sentences; one allowed`);
       problems.push(...wordProblem(item.whyItMatters, WHY_WORDS, `${label}'s line on why it matters`));
     }
+    if (item.preview !== null) problems.push(`${label} carries a preview; only code fills previews`);
     if (item.preview !== null && !(item.preview.image === null || HTTPS.test(item.preview.image))) problems.push(`${label} has a preview image that is not an https link`);
     if (seen.has(item.sourceUrl)) problems.push(`${label} repeats a source`);
     seen.add(item.sourceUrl);

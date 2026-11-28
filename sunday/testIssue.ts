@@ -35,7 +35,7 @@ export const ISSUE_TWO: SundayIssue = {
           sourceLabel: 'BBC Sport',
           sourceUrl: 'https://www.bbc.co.uk/sport/golf/1',
           published: '2026-11-13',
-          preview: { title: 'Smith charges to first title', siteName: 'BBC Sport', description: 'A closing 63 settles it.', image: 'https://ichef.bbci.co.uk/news/1.jpg' },
+          preview: null,
         },
       ],
     },
