@@ -1,4 +1,4 @@
-import type { FeedSource } from './types.ts';
+import type { FeedSource, TourSchedule } from './types.ts';
 
 export const SUNDAY_SOURCES: readonly FeedSource[] = [
   { name: 'GOLF.com', feedUrl: 'https://golf.com/feed/', section: 'golf' },
@@ -11,6 +11,18 @@ export const SUNDAY_SOURCES: readonly FeedSource[] = [
   { name: 'DGPT', feedUrl: 'https://www.dgpt.com/feed/', section: 'tracer' },
 ];
 
+export const TOUR_SCHEDULES: readonly TourSchedule[] = [
+  { name: 'PGA Tour', url: 'https://www.pgatour.com/schedule' },
+  { name: 'DP World Tour', url: 'https://www.europeantour.com/dpworld-tour/schedule/' },
+  { name: 'LPGA Tour', url: 'https://www.lpga.com/tournaments' },
+  { name: 'LIV Golf', url: 'https://www.livgolf.com/schedule' },
+];
+
+export function tourScheduleFor(url: string): TourSchedule | null {
+  const host = URL.parse(url)?.hostname;
+  return TOUR_SCHEDULES.find((schedule) => new URL(schedule.url).hostname === host) ?? null;
+}
+
 export const PILOT_ISSUES: number = 4;
 export const MAX_ITEMS: number = 5;
 
@@ -19,6 +31,12 @@ export interface WordRange {
   max: number;
 }
 
+export const MIN_QUICK_HITS: number = 3;
+export const MAX_QUICK_HITS: number = 5;
+export const MAX_EVENTS: number = 4;
+export const LEAD_WORDS: WordRange = { min: 150, max: 250 };
+export const QUICK_HIT_WORDS: WordRange = { min: 6, max: 30 };
+export const TIP_WORDS: WordRange = { min: 40, max: 120 };
 export const NOTE_WORDS: WordRange = { min: 60, max: 120 };
 export const BODY_WORDS: WordRange = { min: 60, max: 150 };
 export const WHY_WORDS: WordRange = { min: 6, max: 35 };

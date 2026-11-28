@@ -19,3 +19,13 @@ export function displayDay(iso: string): string {
   if (match === null || month === undefined) throw new Error(`Not a yyyy-mm-dd date: ${iso}`);
   return `${Number(match[3])} ${month} ${match[1]}`;
 }
+
+export function displayRange(starts: string, ends: string): string {
+  const start = displayDay(starts);
+  const [startDay, startMonth, startYear] = start.split(' ');
+  if (starts === ends) return `${startDay} ${startMonth}`;
+  const end = displayDay(ends);
+  const [endDay, endMonth, endYear] = end.split(' ');
+  if (startYear !== endYear) return `${start} to ${end}`;
+  return startMonth === endMonth ? `${startDay}–${endDay} ${endMonth}` : `${startDay} ${startMonth} to ${endDay} ${endMonth}`;
+}

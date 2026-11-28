@@ -1,0 +1,17 @@
+---
+import SundayReadLink from './SundayReadLink.astro';
+import { SUNDAY_TIP_LABELS } from '../lib/sundayIssue';
+import type { SundayTip } from '../types/sunday';
+
+interface Props {
+  tip: SundayTip;
+}
+
+const { tip } = Astro.props;
+---
+<section aria-labelledby="sunday-round" class="ss-card not-prose my-10 flex flex-col gap-3 border-volt p-5 md:p-6" data-sunday-round>
+  <h2 id="sunday-round" class="ss-eyebrow">For your Sunday round · {SUNDAY_TIP_LABELS[tip.kind]}</h2>
+  <h3 class="text-title-2 text-ice">{tip.headline}</h3>
+  <p class="leading-relaxed text-ice">{tip.body}</p>
+  <SundayReadLink href={tip.sourceUrl} siteName={tip.sourceLabel} />
+</section>

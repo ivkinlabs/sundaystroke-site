@@ -6,6 +6,11 @@ export interface FeedSource {
   section: SundaySectionKey;
 }
 
+export interface TourSchedule {
+  name: string;
+  url: string;
+}
+
 export interface FeedEntry {
   title: string;
   link: string;
@@ -43,6 +48,7 @@ export type NoteVerdict = Omit<ItemVerdict, 'sourceUrl'>;
 
 export interface CheckReply {
   editorNote: NoteVerdict;
+  thisWeek: NoteVerdict;
   verdicts: readonly ItemVerdict[];
 }
 

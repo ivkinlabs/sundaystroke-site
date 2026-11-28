@@ -40,6 +40,15 @@ function utcDay(date: string): Date {
   return day;
 }
 
+export function isIsoDay(date: string): boolean {
+  try {
+    utcDay(date);
+    return true;
+  } catch {
+    return false;
+  }
+}
+
 export function issueDateArgument(value: string): string {
   if (!isSunday(value)) throw new Error(`${value} is not a Sunday`);
   return value;

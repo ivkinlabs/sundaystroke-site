@@ -1,6 +1,10 @@
 ---
 import ArticlePage from '../../../components/ArticlePage.astro';
+import SundayLeadStory from '../../../components/SundayLeadStory.astro';
+import SundayQuickHits from '../../../components/SundayQuickHits.astro';
+import SundayRoundTip from '../../../components/SundayRoundTip.astro';
 import SundayStoryCard from '../../../components/SundayStoryCard.astro';
+import SundayThisWeek from '../../../components/SundayThisWeek.astro';
 import { SUNDAY_ISSUES } from '../../../data/sunday';
 import { SUNDAY_SECTION_HEADINGS } from '../../../lib/sundayIssue';
 import { sitePath } from '../../../utils/paths';
@@ -28,6 +32,8 @@ const storyAnchor = (section: SundaySection, at: number): string => `${anchor(se
   banner={null}
   calls={[]}
 >
+  {issue.lead !== null && <SundayLeadStory item={issue.lead} />}
+
   {issue.editorNote !== null && (
     <section aria-labelledby="editors-note">
       <h2 id="editors-note" class="!mt-0">Editor’s note</h2>
@@ -35,19 +41,9 @@ const storyAnchor = (section: SundaySection, at: number): string => `${anchor(se
     </section>
   )}
 
-  <nav aria-labelledby="in-this-issue" class="ss-card not-prose my-10 p-5">
-    <h2 id="in-this-issue" class="ss-eyebrow">In this issue</h2>
-    {issue.sections.map((section) => (
-      <div class="mt-4">
-        <a href={`#${anchor(section.key)}`} class="ss-tag text-mist hover:text-ice">{SUNDAY_SECTION_HEADINGS[section.key]}</a>
-        <ol class="mt-2 flex flex-col gap-2">
-          {section.items.map((item, at) => (
-            <li><a href={`#${storyAnchor(section, at)}`} class="text-ice hover:text-volt">{item.headline}</a></li>
-          ))}
-        </ol>
-      </div>
-    ))}
-  </nav>
+  {issue.quickHits.length > 0 && <SundayQuickHits hits={issue.quickHits} />}
+
+  {issue.thisWeek !== null && <SundayThisWeek events={issue.thisWeek} />}
 
   {issue.sections.map((section) => (
     <section data-section={section.key} aria-labelledby={anchor(section.key)}>
@@ -57,6 +53,8 @@ const storyAnchor = (section: SundaySection, at: number): string => `${anchor(se
       ))}
     </section>
   ))}
+
+  {issue.sundayRound !== null && <SundayRoundTip tip={issue.sundayRound} />}
 
   <p><a href={sitePath('/sunday/')}>All issues</a></p>
 </ArticlePage>

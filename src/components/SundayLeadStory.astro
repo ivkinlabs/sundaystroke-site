@@ -1,0 +1,36 @@
+---
+import SundayReadLink from './SundayReadLink.astro';
+import { displayDay } from '../utils/dates';
+import type { SundayItem } from '../types/sunday';
+
+interface Props {
+  item: SundayItem;
+}
+
+const { item } = Astro.props;
+const image = item.preview?.image ?? null;
+const paragraphs = item.body.split(/\n\s*\n/).map((paragraph) => paragraph.trim()).filter((paragraph) => paragraph !== '');
+---
+<section aria-labelledby="lead-story" class="ss-card not-prose mb-10 overflow-hidden" data-sunday-lead>
+  {image !== null && (
+    <img
+      src={image}
+      alt=""
+      decoding="async"
+      referrerpolicy="no-referrer"
+      class="aspect-[16/9] w-full object-cover"
+    />
+  )}
+  <div class="flex flex-col gap-4 p-5 md:p-7">
+    <p class="ss-tag text-mist">
+      <span class="text-volt">The lead</span> · {item.sourceLabel}
+      {item.published !== null && <> · <time datetime={item.published}>{displayDay(item.published)}</time></>}
+    </p>
+    <h2 id="lead-story" class="text-screen-title text-ice">{item.headline}</h2>
+    {paragraphs.map((paragraph) => <p class="text-body-lg leading-relaxed text-ice">{paragraph}</p>)}
+    {item.whyItMatters !== null && (
+      <p class="text-body-lg leading-relaxed text-ice"><strong>Why it matters:</strong> {item.whyItMatters}</p>
+    )}
+    <SundayReadLink href={item.sourceUrl} siteName={item.preview?.siteName ?? item.sourceLabel} />
+  </div>
+</section>

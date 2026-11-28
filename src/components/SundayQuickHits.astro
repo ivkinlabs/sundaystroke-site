@@ -1,0 +1,17 @@
+---
+import type { SundayQuickHit } from '../types/sunday';
+
+interface Props {
+  hits: readonly SundayQuickHit[];
+}
+
+const { hits } = Astro.props;
+---
+<section aria-labelledby="quick-hits" data-sunday-quick-hits>
+  <h2 id="quick-hits">Quick hits</h2>
+  <ul>
+    {hits.map((hit) => (
+      <li>{hit.text} <a href={hit.sourceUrl}>{hit.sourceLabel}</a></li>
+    ))}
+  </ul>
+</section>

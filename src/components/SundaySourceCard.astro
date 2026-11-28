@@ -6,27 +6,25 @@ interface Props {
 }
 
 const { item } = Astro.props;
+const siteName = item.preview?.siteName ?? item.sourceLabel;
+const image = item.preview?.image ?? null;
 ---
 <a
   href={item.sourceUrl}
-  class="not-prose mt-5 flex flex-col overflow-hidden sm:flex-row rounded-xl border border-line bg-raised text-ice no-underline transition-colors hover:border-volt focus-visible:border-volt"
+  class="not-prose mt-5 flex items-center overflow-hidden rounded-xl border border-line bg-raised text-ice no-underline transition-colors hover:border-volt focus-visible:border-volt"
 >
-  {item.preview !== null && item.preview.image !== null && (
+  {image !== null && (
     <img
-      src={item.preview.image}
+      src={image}
       alt=""
       loading="lazy"
       decoding="async"
       referrerpolicy="no-referrer"
-      class="aspect-[1.91/1] w-full shrink-0 object-cover sm:aspect-auto sm:w-36"
+      class="aspect-[1.91/1] w-32 shrink-0 object-cover sm:w-40"
     />
   )}
-  <span class="flex min-w-0 flex-col gap-1.5 p-4">
-    <span class="ss-tag text-mist">{item.preview?.siteName ?? item.sourceLabel}</span>
-    <span class="font-semibold leading-snug">{item.preview?.title ?? `Read the full story at ${item.sourceLabel}`}</span>
-    {item.preview !== null && item.preview.description !== '' && (
-      <span class="text-sm leading-relaxed text-mist">{item.preview.description}</span>
-    )}
-    <span class="text-sm text-volt">Read the original story <span aria-hidden="true">→</span></span>
+  <span class="flex min-w-0 flex-col gap-1 px-4 py-3">
+    <span class="ss-tag text-mist">{siteName}</span>
+    <span class="text-sm font-semibold text-volt">Read at {siteName} <span aria-hidden="true">→</span></span>
   </span>
 </a>

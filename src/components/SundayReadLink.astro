@@ -1,0 +1,9 @@
+---
+interface Props {
+  href: string;
+  siteName: string;
+}
+
+const { href, siteName } = Astro.props;
+---
+<a href={href} class="not-prose inline-flex text-sm font-semibold text-volt no-underline hover:underline">Read at {siteName} <span aria-hidden="true">&nbsp;→</span></a>

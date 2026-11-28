@@ -10,7 +10,7 @@ import { DEAD_LINK_STATUSES, pageStatus } from './site.ts';
 import { SITE_REPO } from './sources.ts';
 import { ISSUES_DIR, readCandidates, readCheckRecord, sha256, statePaths, writeJson } from './state.ts';
 import type { CheckRecord, ItemVerdict } from './types.ts';
-import { applyVerdicts, confirmsNothing, itemUrls, parseVerdicts, withoutItems } from './verdicts.ts';
+import { applyVerdicts, confirmsNothing, eventUrls, itemUrls, parseVerdicts, withoutItems } from './verdicts.ts';
 import type { SundayIssue } from '../src/types/sunday.ts';
 
 function localIssues(): readonly SundayIssue[] {
@@ -50,8 +50,16 @@ export function commandValidate(issueDate: string): void {
 }
 
 async function deadLinks(issue: SundayIssue): Promise<readonly ItemVerdict[]> {
+  return deadAmong(itemUrls(issue));
+}
+
+async function deadEventLinks(issue: SundayIssue): Promise<readonly ItemVerdict[]> {
+  return deadAmong(eventUrls(issue));
+}
+
+async function deadAmong(urls: readonly string[]): Promise<readonly ItemVerdict[]> {
   const dead: ItemVerdict[] = [];
-  for (const url of itemUrls(issue)) {
+  for (const url of urls) {
     const status = await pageStatus(url);
     if (DEAD_LINK_STATUSES.has(status)) dead.push({ sourceUrl: url, verdict: 'rejected', reason: `the link answered ${status}` });
   }
@@ -66,9 +74,11 @@ function combined(checker: readonly ItemVerdict[], dead: readonly ItemVerdict[])
 export async function commandCheck(issueDate: string): Promise<void> {
   const paths = statePaths(issueDate);
   const issue = validated(issueDate);
+  const deadEvents = await deadEventLinks(issue);
+  if (deadEvents.length > 0) throw new Error(`fix the This week box; its links are dead: ${deadEvents.map((verdict) => `${verdict.sourceUrl} (${verdict.reason})`).join(', ')}`);
   const dead = await deadLinks(issue);
   const live = withoutItems(issue, dead);
-  const check = live.sections.length === 0 ? null : parseVerdicts(replyJson(runChecker(live, readCandidates(paths.candidates))), live);
+  const check = itemUrls(live).length === 0 ? null : parseVerdicts(replyJson(runChecker(live, readCandidates(paths.candidates))), live);
   const verdicts = combined(check?.verdicts ?? [], dead);
   for (const verdict of verdicts) console.log(`${verdict.verdict} ${verdict.sourceUrl}: ${verdict.reason}`);
   if (check === null || confirmsNothing(verdicts)) {
@@ -79,7 +89,9 @@ export async function commandCheck(issueDate: string): Promise<void> {
     return;
   }
   console.log(`${check.editorNote.verdict} the editor's note: ${check.editorNote.reason}`);
+  console.log(`${check.thisWeek.verdict} the This week box: ${check.thisWeek.reason}`);
   if (check.editorNote.verdict === 'rejected') throw new Error(`the check rejected the editor's note: ${check.editorNote.reason}`);
+  if (check.thisWeek.verdict === 'rejected') throw new Error(`the check rejected the This week box: ${check.thisWeek.reason}`);
   const checked = applyVerdicts(issue, verdicts);
   const content = `${JSON.stringify(checked.issue, null, 2)}\n`;
   writeFileSync(paths.issueFile, content);
