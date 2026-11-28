@@ -39,6 +39,13 @@ export interface ItemVerdict {
   reason: string;
 }
 
+export type NoteVerdict = Omit<ItemVerdict, 'sourceUrl'>;
+
+export interface CheckReply {
+  editorNote: NoteVerdict;
+  verdicts: readonly ItemVerdict[];
+}
+
 export interface CheckRecord {
   issueDate: string;
   issueHash: string;

@@ -13,6 +13,16 @@ export const SUNDAY_SOURCES: readonly FeedSource[] = [
 
 export const PILOT_ISSUES: number = 4;
 export const MAX_ITEMS: number = 5;
+
+export interface WordRange {
+  min: number;
+  max: number;
+}
+
+export const NOTE_WORDS: WordRange = { min: 60, max: 120 };
+export const BODY_WORDS: WordRange = { min: 60, max: 150 };
+export const WHY_WORDS: WordRange = { min: 6, max: 35 };
+export const COPIED_RUN_WORDS: number = 8;
 export const ITEM_WINDOW_DAYS: number = 7;
 export const EXCERPT_CHARS: number = 280;
 export const SITE_ORIGIN: string = 'https://sundaystroke.com';

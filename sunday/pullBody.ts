@@ -10,7 +10,7 @@ function verdictLine(verdict: ItemVerdict): string {
 
 function factCheck(issue: SundayIssue): readonly FactCheckPage[] {
   const facts = issue.sections.flatMap((section) =>
-    section.items.map((item): FactCheckFact => ({ part: 'text', claim: `${item.headline}: ${item.body}`, source: item.sourceUrl })),
+    section.items.map((item): FactCheckFact => ({ part: 'text', claim: [`${item.headline}: ${item.body}`, item.whyItMatters].filter((text) => text !== null).join(' '), source: item.sourceUrl })),
   );
   return [{ page: statePaths(issue.slug).issueFile, facts }];
 }
@@ -26,6 +26,9 @@ export function pullBody(issue: SundayIssue, record: CheckRecord): string {
     '',
     `## Rejected by the check (${rejected.length})`,
     ...(rejected.length === 0 ? ['None.'] : rejected.map(verdictLine)),
+    '',
+    "## Editor's note",
+    issue.editorNote ?? 'None.',
     '',
     '## Fact check',
     `${FENCE}factory-fact-check`,

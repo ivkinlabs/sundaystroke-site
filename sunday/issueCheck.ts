@@ -10,7 +10,7 @@ import { DEAD_LINK_STATUSES, pageStatus } from './site.ts';
 import { SITE_REPO } from './sources.ts';
 import { ISSUES_DIR, readCandidates, readCheckRecord, sha256, statePaths, writeJson } from './state.ts';
 import type { CheckRecord, ItemVerdict } from './types.ts';
-import { applyVerdicts, confirmsNothing, itemUrls, parseVerdicts } from './verdicts.ts';
+import { applyVerdicts, confirmsNothing, itemUrls, parseVerdicts, withoutItems } from './verdicts.ts';
 import type { SundayIssue } from '../src/types/sunday.ts';
 
 function localIssues(): readonly SundayIssue[] {
@@ -67,15 +67,19 @@ export async function commandCheck(issueDate: string): Promise<void> {
   const paths = statePaths(issueDate);
   const issue = validated(issueDate);
   const dead = await deadLinks(issue);
-  const verdicts = combined(parseVerdicts(replyJson(runChecker(issue, readCandidates(paths.candidates))), issue), dead);
+  const live = withoutItems(issue, dead);
+  const check = live.sections.length === 0 ? null : parseVerdicts(replyJson(runChecker(live, readCandidates(paths.candidates))), live);
+  const verdicts = combined(check?.verdicts ?? [], dead);
   for (const verdict of verdicts) console.log(`${verdict.verdict} ${verdict.sourceUrl}: ${verdict.reason}`);
-  if (confirmsNothing(verdicts)) {
+  if (check === null || confirmsNothing(verdicts)) {
     const empty: CheckRecord = { issueDate, issueHash: sha256(readFileSync(paths.issueFile, 'utf8')), checkedAt: new Date().toISOString(), verdicts };
     rmSync(paths.check, { force: true });
     writeJson(paths.confirmedNothing, empty);
     console.log(`the check confirmed no item, so there is no issue for ${issueDate}`);
     return;
   }
+  console.log(`${check.editorNote.verdict} the editor's note: ${check.editorNote.reason}`);
+  if (check.editorNote.verdict === 'rejected') throw new Error(`the check rejected the editor's note: ${check.editorNote.reason}`);
   const checked = applyVerdicts(issue, verdicts);
   const content = `${JSON.stringify(checked.issue, null, 2)}\n`;
   writeFileSync(paths.issueFile, content);
