@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { issueFileProblems, issueProblems, sentenceCount, shapeProblems } from './rules.ts';
+import { MIN_CHECKED_ITEMS, MIN_DRAFT_ITEMS } from './sources.ts';
 import { ISSUE_TWO, candidatesFor } from './testIssue.ts';
 import type { RuleContext } from './rules.ts';
 import type { CandidateFile } from './types.ts';
@@ -9,8 +10,8 @@ import { SUNDAY_ISSUES } from '../src/data/sunday.ts';
 const issueOne = SUNDAY_ISSUES[0];
 if (issueOne === undefined) throw new Error('issue 1 is missing');
 
-function context(candidates: CandidateFile = candidatesFor(ISSUE_TWO)): RuleContext {
-  return { earlierIssues: [issueOne], candidates };
+function context(candidates: CandidateFile = candidatesFor(ISSUE_TWO), minItems: number = MIN_CHECKED_ITEMS): RuleContext {
+  return { earlierIssues: [issueOne], candidates, minItems };
 }
 
 const golfStory = ISSUE_TWO.sections[0]?.items[0];
@@ -98,6 +99,11 @@ describe('issueProblems', () => {
     expect(storyProblems({ preview: { ...preview, image: 'https://me:pw@example.com/a.jpg' } })).toHaveLength(1);
   });
 
+  it('wants three stories from the writer and keeps a checked issue with fewer', () => {
+    expect(issueProblems(ISSUE_TWO, context(candidatesFor(ISSUE_TWO), MIN_DRAFT_ITEMS))).toContain('2 items; 3 to 5 allowed');
+    expect(issueProblems(ISSUE_TWO, context(candidatesFor(ISSUE_TWO), MIN_CHECKED_ITEMS))).toEqual([]);
+  });
+
   it('rejects more than five items and a repeated source', () => {
     const six = withGolf({ items: Array.from({ length: 5 }, () => golfStory) });
     const problems = issueProblems(six, context()).join('\n');
@@ -123,7 +129,7 @@ describe('issueProblems', () => {
 describe('every published issue', () => {
   it('follows the rules against the issues before it, or for an earlier layout at least promotes nothing', () => {
     SUNDAY_ISSUES.forEach((issue, at) => {
-      const problems = issueProblems(issue, { earlierIssues: SUNDAY_ISSUES.slice(0, at), candidates: candidatesFor(issue) });
+      const problems = issueProblems(issue, { earlierIssues: SUNDAY_ISSUES.slice(0, at), candidates: candidatesFor(issue), minItems: MIN_CHECKED_ITEMS });
       const earlierLayout = issue.editorNote === null;
       expect(earlierLayout ? problems.filter((problem) => problem.startsWith('the copy')) : problems, issue.slug).toEqual([]);
     });

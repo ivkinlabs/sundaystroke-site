@@ -12,6 +12,8 @@ export const SUNDAY_SOURCES: readonly FeedSource[] = [
 ];
 
 export const PILOT_ISSUES: number = 4;
+export const MIN_DRAFT_ITEMS: number = 3;
+export const MIN_CHECKED_ITEMS: number = 1;
 export const MAX_ITEMS: number = 5;
 
 export interface WordRange {

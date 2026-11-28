@@ -20,7 +20,7 @@ Your working directory is a fresh worktree of the site on `origin/main`. Every s
 Write a golf newsletter people read for its own sake: 3 to 5 minutes, a clear voice, a link to every full story.
 
 1. Read `paths.candidates`. Golf stories come from the golf feeds; disc golf stories come from the PDGA and DGPT feeds and go only in the Disc golf section.
-2. Choose 3 to 5 stories a club golfer would care about this week (results, rule or tour news, a practical playing idea). A thin week gets fewer stories, down to one; never pad it. Skip live blogs, betting, gear deals and listicles.
+2. Choose 3 to 5 stories a club golfer would care about this week (results, rule or tour news, a practical playing idea). `validate` refuses fewer than 3; if the week truly has fewer worth telling, stop. Skip live blogs, betting, gear deals and listicles.
 3. Open each chosen story's page and read it before you write about it. Every name, number and date must be on that page; never copy a sentence, never quote more than a few words, never use the source's photos. In your own words:
    - `headline`: short and plain.
    - `body`: 60 to 150 words on what happened, enough to retell it; `validate` refuses eight words in a row from the story's title, excerpt or share card.

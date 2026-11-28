@@ -1,6 +1,7 @@
 import { validated } from './issueCheck.ts';
 import { previewFrom } from './openGraph.ts';
 import { sourcePage } from './site.ts';
+import { MIN_DRAFT_ITEMS } from './sources.ts';
 import { statePaths, writeJson } from './state.ts';
 import type { SundayItem } from '../src/types/sunday.ts';
 
@@ -10,7 +11,7 @@ async function withPreview(item: SundayItem): Promise<SundayItem> {
 }
 
 export async function commandPreview(issueDate: string): Promise<void> {
-  const issue = validated(issueDate);
+  const issue = validated(issueDate, MIN_DRAFT_ITEMS);
   const sections = await Promise.all(issue.sections.map(async (section) => ({ ...section, items: await Promise.all(section.items.map(withPreview)) })));
   writeJson(statePaths(issueDate).issueFile, { ...issue, sections });
 }
