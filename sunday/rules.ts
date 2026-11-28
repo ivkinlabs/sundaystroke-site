@@ -20,9 +20,7 @@ const TITLE_SUFFIX: string = ' | SundayStroke';
 const SECTION_ORDER: readonly string[] = Object.keys(SUNDAY_SECTION_HEADINGS);
 const ISSUE_FIELDS: readonly string[] = ['slug', 'number', 'date', 'title', 'pageTitle', 'summary', 'editorNote', 'sections'];
 const SECTION_FIELDS: readonly string[] = ['key', 'items'];
-const ITEM_FIELDS: readonly string[] = ['headline', 'body', 'whyItMatters', 'sourceLabel', 'sourceUrl', 'published', 'preview'];
-const PREVIEW_FIELDS: readonly string[] = ['title', 'siteName', 'description', 'image'];
-const HTTPS: RegExp = /^https:\/\//;
+const ITEM_FIELDS: readonly string[] = ['headline', 'body', 'whyItMatters', 'sourceLabel', 'sourceUrl', 'published'];
 const DISC_GOLF_SECTION: string = SUNDAY_SECTION_HEADINGS.tracer;
 
 export function sentenceCount(text: string): number {
@@ -35,10 +33,6 @@ function itemText(item: SundayItem): string {
 
 function sectionText(section: SundaySection): string {
   return section.items.map(itemText).join(' ');
-}
-
-function previewText(issue: SundayIssue): readonly string[] {
-  return issue.sections.flatMap((section) => section.items.flatMap((item) => (item.preview === null ? [] : [item.preview.title, item.preview.description])));
 }
 
 function wordProblem(text: string, range: WordRange, label: string): string[] {
@@ -87,8 +81,6 @@ function itemProblems(section: SundaySection, byUrl: ReadonlyMap<string, Candida
       if (sentences !== 1) problems.push(`${label} says why it matters in ${sentences} sentences; one allowed`);
       problems.push(...wordProblem(item.whyItMatters, WHY_WORDS, `${label}'s line on why it matters`));
     }
-    if (item.preview !== null) problems.push(`${label} carries a preview; only code fills previews`);
-    if (item.preview !== null && !(item.preview.image === null || HTTPS.test(item.preview.image))) problems.push(`${label} has a preview image that is not an https link`);
     if (seen.has(item.sourceUrl)) problems.push(`${label} repeats a source`);
     seen.add(item.sourceUrl);
     const candidate = byUrl.get(item.sourceUrl);
@@ -102,7 +94,7 @@ function itemProblems(section: SundaySection, byUrl: ReadonlyMap<string, Candida
     if (!(published >= window.from && published < window.to)) problems.push(`${label} was published ${candidate.published}, outside the ${ITEM_WINDOW_DAYS} days before the issue`);
     const day = madridDay(published).date;
     if (item.published !== day) problems.push(`${label} must carry its source's date, ${day}`);
-    const sourceText = [candidate.title, candidate.excerpt, item.preview?.title ?? '', item.preview?.description ?? ''].join(' ');
+    const sourceText = [candidate.title, candidate.excerpt].join(' ');
     const copied = copiedRun(itemText(item), sourceText);
     if (copied !== null) problems.push(`${label} copies its source word for word: "${copied}"`);
   }
@@ -111,9 +103,8 @@ function itemProblems(section: SundaySection, byUrl: ReadonlyMap<string, Candida
 
 function copyProblems(issue: SundayIssue): string[] {
   const texts = [issue.title, issue.pageTitle, issue.summary, issue.editorNote ?? '', ...issue.sections.map(sectionText)];
-  const shown = [...texts, ...previewText(issue)];
   const broken = COPY_RULES.filter((rule) => texts.some((text) => rule.pattern.test(text))).map((rule) => rule.reason);
-  const promoting = [...new Set(shown.flatMap(promotionReasons))];
+  const promoting = [...new Set(texts.flatMap(promotionReasons))];
   return [...broken, ...promoting].map((reason) => `the copy ${reason}`);
 }
 
@@ -130,8 +121,6 @@ export function shapeProblems(value: unknown): readonly string[] {
     const items = isRecord(section) && Array.isArray(section.items) ? section.items : [];
     for (const item of items) {
       problems.push(...fieldProblem(item, ITEM_FIELDS, 'each item'));
-      const preview = isRecord(item) ? item.preview : null;
-      if (preview !== null) problems.push(...fieldProblem(preview, PREVIEW_FIELDS, 'each preview'));
     }
   }
   return [...new Set(problems)];

@@ -1,6 +1,6 @@
 import { hasStrings, isRecord } from './guards.ts';
 import type { Fields } from './guards.ts';
-import type { SundayIssue, SundayItem, SundayPreview, SundaySection, SundaySectionKey } from '../types/sunday.ts';
+import type { SundayIssue, SundayItem, SundaySection, SundaySectionKey } from '../types/sunday.ts';
 
 export const SUNDAY_SECTION_HEADINGS: Readonly<Record<SundaySectionKey, string>> = {
   golf: 'Golf',
@@ -14,7 +14,6 @@ export const SUNDAY_SECTION_ANCHORS: Readonly<Record<SundaySectionKey, string>> 
 
 const ITEM_STRINGS: readonly string[] = ['headline', 'body', 'sourceLabel', 'sourceUrl'];
 const ISSUE_STRINGS: readonly string[] = ['slug', 'date', 'title', 'pageTitle', 'summary'];
-const PREVIEW_STRINGS: readonly string[] = ['title', 'siteName', 'description'];
 
 function fail(label: string, reason: string): never {
   throw new Error(`${label} is not a Sunday issue: ${reason}`);
@@ -27,17 +26,6 @@ function textOrNull(fields: Fields, key: string, label: string): string | null {
   return value;
 }
 
-function readPreview(value: unknown, label: string): SundayPreview | null {
-  if (value === undefined || value === null) return null;
-  if (!isRecord(value) || !hasStrings(value, PREVIEW_STRINGS)) fail(label, 'a preview needs title, siteName and description');
-  return {
-    title: String(value.title),
-    siteName: String(value.siteName),
-    description: String(value.description),
-    image: textOrNull(value, 'image', label),
-  };
-}
-
 function readItem(value: unknown, label: string): SundayItem {
   if (!isRecord(value) || !hasStrings(value, ITEM_STRINGS)) fail(label, `each item needs ${ITEM_STRINGS.join(', ')}`);
   return {
@@ -47,7 +35,6 @@ function readItem(value: unknown, label: string): SundayItem {
     sourceLabel: String(value.sourceLabel),
     sourceUrl: String(value.sourceUrl),
     published: textOrNull(value, 'published', label),
-    preview: readPreview(value.preview, label),
   };
 }
 

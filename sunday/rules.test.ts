@@ -45,8 +45,6 @@ describe('issueProblems', () => {
     expect(issueProblems(story('Smith won. Our Golf GPS app has the yardages.'), context())).toContain('the copy names an app');
     expect(issueProblems({ ...ISSUE_TWO, editorNote: `${ISSUE_TWO.editorNote ?? ''} Get the app.` }, context())).toContain('the copy names an app');
     expect(issueProblems(withGolf({ items: [{ ...golfStory, whyItMatters: 'Download it and try the drill yourself.' }] }), context())).toContain('the copy asks for a download');
-    const promotedPreview = { title: 'Get the ESPN app', siteName: 'ESPN', description: '', image: null };
-    expect(issueProblems(withGolf({ items: [{ ...golfStory, preview: promotedPreview }] }), context())).toContain('the copy names an app');
     expect(issueProblems({ ...ISSUE_TWO, summary: 'Get it on the App Store.' }, context())).toContain('the copy names an app store');
     expect(issueProblems({ ...ISSUE_TWO, pageTitle: 'Download it free | SundayStroke' }, context())).toContain('the copy asks for a download');
     expect(issueProblems({ ...ISSUE_TWO, summary: 'Find it on the Play-Store.' }, context())).toContain('the copy names an app store');
@@ -86,15 +84,10 @@ describe('issueProblems', () => {
     const candidates = candidatesFor(ISSUE_TWO);
     const copiedFrom = { ...candidates, candidates: candidates.candidates.map((candidate, at) => (at === 0 ? { ...candidate, excerpt: 'He made seven birdies and no bogeys on the way to a 63.' } : candidate)) };
     expect(issueProblems(ISSUE_TWO, context(copiedFrom)).join()).toContain('copies its source word for word: "he made seven birdies and no bogeys on"');
-    const fromPreview = { title: 'Smith wins', siteName: 'BBC Sport', description: 'It was the first title of his career after four years of near misses.', image: null };
-    expect(issueProblems(withGolf({ items: [{ ...golfStory, preview: fromPreview }] }), context()).join()).toContain('copies its source word for word');
   });
 
-  it('dates each story from its source and wants an https preview image', () => {
+  it('dates each story from its source', () => {
     expect(issueProblems(withGolf({ items: [{ ...golfStory, published: '2026-11-10' }] }), context())).toContain('"A final-round charge" must carry its source\'s date, 2026-11-13');
-    const preview = { title: 'Smith wins', siteName: 'BBC Sport', description: '', image: 'http://example.com/a.jpg' };
-    expect(issueProblems(withGolf({ items: [{ ...golfStory, preview }] }), context())).toContain('"A final-round charge" has a preview image that is not an https link');
-    expect(issueProblems(withGolf({ items: [{ ...golfStory, preview: { ...preview, image: null } }] }), context())).toContain('"A final-round charge" carries a preview; only code fills previews');
   });
 
   it('rejects more than five items and a repeated source', () => {
@@ -128,12 +121,12 @@ describe('every published issue', () => {
     });
   });
 
-  it('reads the issues written before the editor\'s note as plain stories without previews', () => {
+  it('reads the issues written before the editor\'s note as plain stories', () => {
     const earlier = SUNDAY_ISSUES.filter((issue) => issue.slug === '2026-11-01' || issue.slug === '2026-11-22');
     expect(earlier.map((issue) => issue.slug)).toEqual(['2026-11-01', '2026-11-22']);
     for (const issue of earlier) {
       expect(issue.editorNote).toBeNull();
-      expect(issue.sections.flatMap((section) => section.items).every((item) => item.preview === null && item.whyItMatters === null)).toBe(true);
+      expect(issue.sections.flatMap((section) => section.items).every((item) => item.whyItMatters === null)).toBe(true);
     }
   });
 
@@ -151,9 +144,7 @@ describe('every published issue', () => {
     const headed = { ...ISSUE_TWO, sections: ISSUE_TWO.sections.map((section) => ({ ...section, heading: 'Golf' })) };
     expect(shapeProblems(headed)).toEqual(['each section must have exactly the fields key, items']);
     const promo = { ...ISSUE_TWO, sections: ISSUE_TWO.sections.map((section) => ({ ...section, items: section.items.map((item) => ({ ...item, storeUrl: 'https://apps.apple.com/app/id1' })) })) };
-    expect(shapeProblems(promo)).toEqual(['each item must have exactly the fields headline, body, whyItMatters, sourceLabel, sourceUrl, published, preview']);
-    const photo = { ...ISSUE_TWO, sections: ISSUE_TWO.sections.map((section) => ({ ...section, items: section.items.map((item) => ({ ...item, preview: { title: 't', siteName: 's', description: 'd', image: null, photo: 'x' } })) })) };
-    expect(shapeProblems(photo)).toEqual(['each preview must have exactly the fields title, siteName, description, image']);
+    expect(shapeProblems(promo)).toEqual(['each item must have exactly the fields headline, body, whyItMatters, sourceLabel, sourceUrl, published']);
     expect(issueFileProblems({ ...ISSUE_TWO, leadText: 'x' }, ISSUE_TWO, context()).length).toBe(1);
   });
 

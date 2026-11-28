@@ -1,12 +1,5 @@
 export type SundaySectionKey = 'golf' | 'tracer';
 
-export interface SundayPreview {
-  title: string;
-  siteName: string;
-  description: string;
-  image: string | null;
-}
-
 export interface SundayItem {
   headline: string;
   body: string;
@@ -14,7 +7,6 @@ export interface SundayItem {
   sourceLabel: string;
   sourceUrl: string;
   published: string | null;
-  preview: SundayPreview | null;
 }
 
 export interface SundaySection {
