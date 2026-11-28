@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { previewFrom } from './previews.ts';
+import { previewFrom } from './openGraph.ts';
 
 describe('previewFrom', () => {
   it('reads the share card from the page head', () => {

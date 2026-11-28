@@ -10,7 +10,6 @@ const { item } = Astro.props;
 <a
   href={item.sourceUrl}
   class="not-prose mt-5 flex flex-col overflow-hidden sm:flex-row rounded-xl border border-line bg-raised text-ice no-underline transition-colors hover:border-volt focus-visible:border-volt"
-  data-source-card={item.preview === null ? 'text' : 'preview'}
 >
   {item.preview !== null && item.preview.image !== null && (
     <img

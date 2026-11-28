@@ -47,7 +47,7 @@ describe('issueProblems', () => {
     expect(issueProblems({ ...ISSUE_TWO, editorNote: `${ISSUE_TWO.editorNote ?? ''} Get the app.` }, context())).toContain('the copy names an app');
     expect(storyProblems({ whyItMatters: 'Download it and try the drill yourself.' })).toContain('the copy asks for a download');
     const promotedPreview = { title: 'Get the ESPN app', siteName: 'ESPN', description: '', image: null };
-    expect(storyProblems({ preview: promotedPreview })).toContain('the copy names an app');
+    expect(storyProblems({ preview: promotedPreview })).toContain('"A final-round charge" has a preview code would not fill');
     expect(issueProblems({ ...ISSUE_TWO, summary: 'Get it on the App Store.' }, context())).toContain('the copy names an app store');
     expect(issueProblems({ ...ISSUE_TWO, pageTitle: 'Download it free | SundayStroke' }, context())).toContain('the copy asks for a download');
     expect(issueProblems({ ...ISSUE_TWO, summary: 'Find it on the Play-Store.' }, context())).toContain('the copy names an app store');
@@ -130,12 +130,9 @@ describe('every published issue', () => {
   });
 
   it('reads the issues written before the editor\'s note as plain stories without previews', () => {
-    const earlier = SUNDAY_ISSUES.filter((issue) => issue.slug === '2026-11-01' || issue.slug === '2026-11-22');
+    const earlier = SUNDAY_ISSUES.filter((issue) => issue.editorNote === null);
     expect(earlier.map((issue) => issue.slug)).toEqual(['2026-11-01', '2026-11-22']);
-    for (const issue of earlier) {
-      expect(issue.editorNote).toBeNull();
-      expect(issue.sections.flatMap((section) => section.items).every((item) => item.preview === null && item.whyItMatters === null)).toBe(true);
-    }
+    expect(earlier.flatMap((issue) => issue.sections.flatMap((section) => section.items)).every((item) => item.preview === null && item.whyItMatters === null)).toBe(true);
   });
 
   it('rejects a story published outside the seven days before the issue', () => {

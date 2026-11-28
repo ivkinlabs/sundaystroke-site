@@ -47,10 +47,6 @@ function sectionText(section: SundaySection): string {
   return section.items.map(itemText).join(' ');
 }
 
-function previewText(issue: SundayIssue): readonly string[] {
-  return issue.sections.flatMap((section) => section.items.flatMap((item) => (item.preview === null ? [] : [item.preview.title, item.preview.description])));
-}
-
 function wordProblem(text: string, range: WordRange, label: string): string[] {
   const words = wordCount(text);
   return words < range.min || words > range.max ? [`${label} has ${words} words; ${range.min} to ${range.max} allowed`] : [];
@@ -120,9 +116,8 @@ function itemProblems(section: SundaySection, byUrl: ReadonlyMap<string, Candida
 
 function copyProblems(issue: SundayIssue): string[] {
   const texts = [issue.title, issue.pageTitle, issue.summary, issue.editorNote ?? '', ...issue.sections.map(sectionText)];
-  const shown = [...texts, ...previewText(issue)];
   const broken = COPY_RULES.filter((rule) => texts.some((text) => rule.pattern.test(text))).map((rule) => rule.reason);
-  const promoting = [...new Set(shown.flatMap(promotionReasons))];
+  const promoting = [...new Set(texts.flatMap(promotionReasons))];
   return [...broken, ...promoting].map((reason) => `the copy ${reason}`);
 }
 

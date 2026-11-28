@@ -7,7 +7,7 @@ const GOLF = 'https://www.bbc.co.uk/sport/golf/1';
 const DISC = 'https://www.pdga.com/news/1';
 
 const NOTE = { verdict: 'confirmed', reason: 'every fact is on a kept page' };
-const reply = (verdicts: readonly ItemVerdict[], issueDate: string = '2026-11-15'): string => JSON.stringify({ issueDate, editorNote: NOTE, verdicts });
+const reply = (verdicts: readonly Record<string, unknown>[], issueDate: string = '2026-11-15', editorNote: unknown = NOTE): string => JSON.stringify({ issueDate, editorNote, verdicts });
 const confirmed = (sourceUrl: string): ItemVerdict => ({ sourceUrl, verdict: 'confirmed', reason: 'matches the page' });
 const rejected = (sourceUrl: string): ItemVerdict => ({ sourceUrl, verdict: 'rejected', reason: 'the source says 2028' });
 
@@ -33,12 +33,12 @@ describe('parseVerdicts', () => {
 
   it('refuses a check that gave no verdict on the editor\'s note', () => {
     expect(() => parseVerdicts(JSON.stringify({ issueDate: '2026-11-15', verdicts: [confirmed(GOLF), confirmed(DISC)] }), ISSUE_TWO)).toThrow(/editorNote/);
-    expect(() => parseVerdicts(JSON.stringify({ issueDate: '2026-11-15', editorNote: { verdict: 'maybe', reason: 'x' }, verdicts: [confirmed(GOLF), confirmed(DISC)] }), ISSUE_TWO)).toThrow(/editorNote/);
+    expect(() => parseVerdicts(reply([confirmed(GOLF), confirmed(DISC)], '2026-11-15', { verdict: 'maybe', reason: 'x' }), ISSUE_TWO)).toThrow(/editorNote/);
   });
 
   it('refuses unknown verdicts and extra fields', () => {
-    expect(() => parseVerdicts(JSON.stringify({ issueDate: '2026-11-15', editorNote: NOTE, verdicts: [{ ...confirmed(GOLF), verdict: 'maybe' }, confirmed(DISC)] }), ISSUE_TWO)).toThrow();
-    expect(() => parseVerdicts(JSON.stringify({ issueDate: '2026-11-15', editorNote: NOTE, verdicts: [{ ...confirmed(GOLF), note: 'x' }, confirmed(DISC)] }), ISSUE_TWO)).toThrow();
+    expect(() => parseVerdicts(reply([{ ...confirmed(GOLF), verdict: 'maybe' }, confirmed(DISC)]), ISSUE_TWO)).toThrow();
+    expect(() => parseVerdicts(reply([{ ...confirmed(GOLF), note: 'x' }, confirmed(DISC)]), ISSUE_TWO)).toThrow();
   });
 });
 

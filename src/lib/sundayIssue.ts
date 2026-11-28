@@ -6,18 +6,14 @@ export const SUNDAY_SECTION_HEADINGS: Readonly<Record<SundaySectionKey, string>>
   tracer: 'Disc golf',
 };
 
-interface StoredItem extends Omit<SundayItem, 'whyItMatters' | 'published' | 'preview'> {
-  whyItMatters?: string | null;
-  published?: string | null;
-  preview?: SundayPreview | null;
-}
+type NewItemField = 'whyItMatters' | 'published' | 'preview';
+type StoredItem = Omit<SundayItem, NewItemField> & Partial<Pick<SundayItem, NewItemField>>;
 
 interface StoredSection extends Omit<SundaySection, 'items'> {
   items: readonly StoredItem[];
 }
 
-interface StoredIssue extends Omit<SundayIssue, 'editorNote' | 'sections'> {
-  editorNote?: string | null;
+interface StoredIssue extends Omit<SundayIssue, 'editorNote' | 'sections'>, Partial<Pick<SundayIssue, 'editorNote'>> {
   sections: readonly StoredSection[];
 }
 

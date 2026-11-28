@@ -30,8 +30,6 @@ export function pullBody(issue: SundayIssue, record: CheckRecord): string {
     "## Editor's note",
     issue.editorNote ?? 'None.',
     '',
-    "The check confirmed every fact in it against the kept stories' pages.",
-    '',
     '## Fact check',
     `${FENCE}factory-fact-check`,
     JSON.stringify(factCheck(issue), null, 2),
